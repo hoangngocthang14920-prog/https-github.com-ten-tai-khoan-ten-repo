@@ -261,7 +261,21 @@ function renderSettingsLockState() {
 function initContracts() {
     const savedContracts = localStorage.getItem("contracts");
     if (savedContracts) {
-        state.contracts = JSON.parse(savedContracts);
+        try {
+            const parsed = JSON.parse(savedContracts);
+            state.contracts = parsed.map(c => ({
+                ...c,
+                contractId: c.contractId ? String(c.contractId) : "",
+                title: c.title ? String(c.title) : "",
+                partner: c.partner ? String(c.partner) : "",
+                summary: c.summary ? String(c.summary) : "",
+                year: c.year ? String(c.year) : ""
+            }));
+            saveContractsToLocal();
+        } catch (e) {
+            console.error("Lỗi khi load contracts:", e);
+            state.contracts = [];
+        }
     } else {
         state.contracts = [...MOCK_CONTRACTS];
         saveContractsToLocal();
@@ -1888,22 +1902,22 @@ async function saveFileItemContract(fileItem) {
     const data = fileItem.extractedData;
     if (!data) throw new Error("Không có dữ liệu trích xuất cho tệp này.");
     
-    const contractId = data.contractId || `HD-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
-    const year = data.year || 'Khác';
+    const contractId = data.contractId ? String(data.contractId) : `HD-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    const year = data.year ? String(data.year) : 'Khác';
     const syncCheckbox = document.getElementById("sync-to-google-checkbox").checked;
     
     let fileUrl = "Lưu trữ cục bộ - không tải lên Drive";
     
     const newContract = {
         contractId: contractId,
-        title: data.title || '',
-        partner: data.partner || '',
+        title: data.title ? String(data.title) : '',
+        partner: data.partner ? String(data.partner) : '',
         value: Number(data.value) || 0,
         signDate: data.signDate || '',
         expiryDate: data.expiryDate || '',
         year: year,
         fileUrl: fileUrl,
-        summary: data.summary || '',
+        summary: data.summary ? String(data.summary) : '',
         syncDate: formatDateString(new Date())
     };
     
@@ -2333,10 +2347,15 @@ function renderContractsTable() {
     
     let filtered = state.contracts.filter(c => {
         // Keyword Search
-        const matchesSearch = c.contractId.toLowerCase().includes(searchVal) || 
-                              c.title.toLowerCase().includes(searchVal) || 
-                              c.partner.toLowerCase().includes(searchVal) ||
-                              (c.summary && c.summary.toLowerCase().includes(searchVal));
+        const contractIdStr = String(c.contractId || '');
+        const titleStr = String(c.title || '');
+        const partnerStr = String(c.partner || '');
+        const summaryStr = String(c.summary || '');
+
+        const matchesSearch = contractIdStr.toLowerCase().includes(searchVal) || 
+                              titleStr.toLowerCase().includes(searchVal) || 
+                              partnerStr.toLowerCase().includes(searchVal) ||
+                              summaryStr.toLowerCase().includes(searchVal);
         
         // Year filter
         const matchesYear = yearVal === 'all' || c.year === yearVal;
@@ -2430,18 +2449,19 @@ async function syncContractsWithGoogleSheets() {
             if (externalData.length > 0) {
                 // Map/merge back into LocalStorage database
                 externalData.forEach(ext => {
-                    const localIdx = state.contracts.findIndex(c => c.contractId === ext.contractId);
+                    const extContractId = ext.contractId ? String(ext.contractId) : "";
+                    const localIdx = state.contracts.findIndex(c => String(c.contractId || '') === extContractId);
                     // Standardize formats
                     const contractObj = {
-                        contractId: ext.contractId,
-                        title: ext.title,
-                        partner: ext.partner,
+                        contractId: extContractId,
+                        title: ext.title ? String(ext.title) : "",
+                        partner: ext.partner ? String(ext.partner) : "",
                         value: Number(ext.value) || 0,
                         signDate: ext.signDate ? parseGASDate(ext.signDate) : "",
                         expiryDate: ext.expiryDate ? parseGASDate(ext.expiryDate) : "",
-                        year: ext.year || new Date().getFullYear().toString(),
+                        year: ext.year ? String(ext.year) : new Date().getFullYear().toString(),
                         fileUrl: ext.fileUrl || "",
-                        summary: ext.summary || "",
+                        summary: ext.summary ? String(ext.summary) : "",
                         syncDate: ext.syncDate || formatDateString(new Date())
                     };
                     
