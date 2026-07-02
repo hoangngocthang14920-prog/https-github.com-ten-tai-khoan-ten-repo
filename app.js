@@ -2751,12 +2751,21 @@ function saveManualContract() {
     const existingIndex = state.contracts.findIndex(c => c.contractId === contractId);
     
     let fileUrl = "Lưu trữ cục bộ - không tải lên Drive";
+    let fileId = "";
     let syncDate = formatDateString(new Date());
     
     if (existingIndex > -1) {
         // preserve file details on edit
         fileUrl = state.contracts[existingIndex].fileUrl;
         syncDate = state.contracts[existingIndex].syncDate;
+        fileId = state.contracts[existingIndex].fileId || "";
+        
+        // Extract fileId from URL if not explicitly set
+        if (!fileId && fileUrl && fileUrl.includes("id=")) {
+            try {
+                fileId = fileUrl.split("id=")[1].split("&")[0];
+            } catch (e) {}
+        }
     }
     
     const contractObj = {
@@ -2769,9 +2778,62 @@ function saveManualContract() {
         expiryDate,
         year,
         fileUrl,
+        fileId,
         summary,
         syncDate
     };
+    
+    // Live synchronization with Google Sheets on manual save/edit
+    if (state.gasUrl) {
+        const payload = {
+            action: "addContract",
+            contractId,
+            title,
+            partner,
+            material,
+            value,
+            signDate,
+            expiryDate,
+            year,
+            fileUrl: fileUrl !== "Lưu trữ cục bộ - không tải lên Drive" && !fileUrl.startsWith("Đồng bộ thất bại") ? fileUrl : "",
+            fileId: fileId
+        };
+        
+        fetch(state.gasUrl, {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(resJson => {
+            if (resJson.status === "success") {
+                showToast(`Đã đồng bộ thành công hợp đồng ${contractId} lên Google Sheets!`, "success");
+                // Update fileUrl if Google Apps Script returned a new one
+                if (resJson.fileUrl && resJson.fileUrl !== contractObj.fileUrl) {
+                    contractObj.fileUrl = resJson.fileUrl;
+                    
+                    // extract fileId from new URL if possible
+                    if (resJson.fileUrl.includes("id=")) {
+                        contractObj.fileId = resJson.fileUrl.split("id=")[1].split("&")[0];
+                    }
+                    
+                    // find index again to avoid race conditions
+                    const latestIdx = state.contracts.findIndex(c => c.contractId === contractId);
+                    if (latestIdx > -1) {
+                        state.contracts[latestIdx] = contractObj;
+                        saveContractsToLocal();
+                        renderCurrentTab();
+                    }
+                }
+            } else {
+                showToast(`Lỗi đồng bộ lên Google Sheets: ${resJson.message}`, "error");
+            }
+        })
+        .catch(err => {
+            console.error("Lỗi đồng bộ manual:", err);
+            showToast(`Lỗi kết nối đồng bộ: ${err.message}`, "error");
+        });
+    }
     
     if (existingIndex > -1) {
         state.contracts[existingIndex] = contractObj;
