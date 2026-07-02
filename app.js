@@ -2455,7 +2455,7 @@ function exportContractsToCSV() {
     
     // CSV Header row
     let csvContent = "\uFEFF"; // UTF-8 BOM representation for Excel compliance
-    csvContent += "Mã Hợp Đồng,Tên Hợp Đồng,Đối Tác,Tên hàng hóa/vật tư,Giá Trị (VND),Ngày Ký,Ngày Hết Hạn,Năm Phân Loại,Đường dẫn Drive,Ngày Đồng Bộ\r\n";
+    csvContent += "Mã Hợp Đồng,Tên Hợp Đồng,Đối Tác,Tên hàng hóa/ Vật tư,Giá Trị (VND),Ngày Ký,Ngày Hết Hạn,Năm Phân Loại,Đường dẫn Drive,Ngày Đồng Bộ\r\n";
     
     state.contracts.forEach(c => {
         // Escaping comma and quotes
