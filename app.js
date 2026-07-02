@@ -197,6 +197,7 @@ function initContracts() {
                     contractId: c.contractId ? String(c.contractId) : "",
                     title: c.title ? String(c.title) : "",
                     partner: c.partner ? String(c.partner) : "",
+                    material: c.material ? String(c.material) : "",
                     summary: c.summary ? String(c.summary) : "",
                     year: c.year ? String(c.year) : ""
                 }));
@@ -1604,7 +1605,7 @@ async function callGeminiAPI() {
             {
                 parts: [
                     {
-                        text: "Hãy phân tích hình ảnh/tệp hợp đồng đính kèm này và trích xuất các thông tin sau dưới dạng JSON chuẩn. Trả về DUY NHẤT một chuỗi JSON hợp lệ, không thêm bớt markdown hay ký tự codeblock khác. Schema:\n{\n  \"contractId\": \"Mã số hợp đồng (nếu không có, hãy tạo mã theo định dạng HD-YYYY-XXX dựa trên đối tác và năm)\",\n  \"title\": \"Tên tiêu đề hợp đồng\",\n  \"partner\": \"Tên công ty/đối tác ký kết với chúng tôi\",\n  \"value\": \"Giá trị bằng số hợp đồng (ví dụ 100000000, nếu không có để 0)\",\n  \"signDate\": \"Ngày ký kết (YYYY-MM-DD)\",\n  \"expiryDate\": \"Ngày hết hạn (YYYY-MM-DD)\",\n  \"year\": \"Năm của hợp đồng (phải là 2024, 2025 hoặc 2026 dựa trên ngày ký hoặc nội dung hợp đồng)\",\n  \"summary\": \"Tóm tắt ngắn gọn các điều khoản chính và nghĩa vụ (khoảng 3 dòng)\"\n}"
+                        text: "Hãy phân tích hình ảnh/tệp hợp đồng đính kèm này và trích xuất các thông tin sau dưới dạng JSON chuẩn. Trả về DUY NHẤT một chuỗi JSON hợp lệ, không thêm bớt markdown hay ký tự codeblock khác. Schema:\n{\n  \"contractId\": \"Mã số hợp đồng (nếu không có, hãy tạo mã theo định dạng HD-YYYY-XXX dựa trên đối tác và năm)\",\n  \"title\": \"Tên tiêu đề hợp đồng\",\n  \"partner\": \"Tên công ty/đối tác ký kết với chúng tôi\",\n  \"material\": \"Tên hàng hóa hoặc vật tư chính được đề cập (ví dụ: săm lốp cao su, thép cuộn, v.v., nếu không có hoặc không đề cập rõ thì để rỗng)\",\n  \"value\": \"Giá trị bằng số hợp đồng (ví dụ 100000000, nếu không có để 0)\",\n  \"signDate\": \"Ngày ký kết (YYYY-MM-DD)\",\n  \"expiryDate\": \"Ngày hết hạn (YYYY-MM-DD)\",\n  \"year\": \"Năm của hợp đồng (phải là 2024, 2025 hoặc 2026 dựa trên ngày ký hoặc nội dung hợp đồng)\",\n  \"summary\": \"Tóm tắt ngắn gọn các điều khoản chính và nghĩa vụ (khoảng 3 dòng)\"\n}"
                     },
                     {
                         inlineData: {
@@ -1670,6 +1671,7 @@ async function callMockAIService() {
         contractId: `HD-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
         title: "Hợp đồng Cung cấp Thiết bị Điện tử Văn phòng",
         partner: "Công ty Cổ phần Công nghệ Hoàng Hà",
+        material: "Thiết bị điện tử văn phòng (máy chiếu, màn hình, loa)",
         value: 175000000,
         signDate: "2025-06-15",
         expiryDate: "2026-06-15",
@@ -1680,6 +1682,7 @@ async function callMockAIService() {
     if (filenameLower.includes("thue") || filenameLower.includes("nha") || filenameLower.includes("vanphong")) {
         mockResult.title = "Hợp đồng Thuê Nhà làm Văn phòng Chi nhánh";
         mockResult.partner = "Công ty TNHH Bất động sản Vinhomes";
+        mockResult.material = "Dịch vụ thuê văn phòng";
         mockResult.value = 540000000;
         mockResult.signDate = "2026-05-01";
         mockResult.expiryDate = "2029-05-01";
@@ -1688,6 +1691,7 @@ async function callMockAIService() {
     } else if (filenameLower.includes("cloud") || filenameLower.includes("software") || filenameLower.includes("phanmem")) {
         mockResult.title = "Hợp đồng Thuê bản quyền phần mềm ERP";
         mockResult.partner = "Công ty Cổ phần MISA";
+        mockResult.material = "Bản quyền phần mềm ERP MISA AMIS";
         mockResult.value = 110000000;
         mockResult.signDate = "2024-11-20";
         mockResult.expiryDate = "2025-11-20";
@@ -1710,6 +1714,7 @@ function fillExtractedForm(data) {
     document.getElementById("ext-contract-id").value = data.contractId || "";
     document.getElementById("ext-title").value = data.title || "";
     document.getElementById("ext-partner").value = data.partner || "";
+    document.getElementById("ext-material").value = data.material || "";
     document.getElementById("ext-value").value = data.value || 0;
     document.getElementById("ext-sign-date").value = data.signDate || "";
     document.getElementById("ext-expiry-date").value = data.expiryDate || "";
@@ -1731,6 +1736,7 @@ async function saveExtractedContract() {
     const year = document.getElementById("ext-year").value;
     const title = document.getElementById("ext-title").value;
     const partner = document.getElementById("ext-partner").value;
+    const material = document.getElementById("ext-material").value;
     const value = Number(document.getElementById("ext-value").value) || 0;
     const signDate = document.getElementById("ext-sign-date").value;
     const expiryDate = document.getElementById("ext-expiry-date").value;
@@ -1749,6 +1755,7 @@ async function saveExtractedContract() {
         contractId,
         title,
         partner,
+        material,
         value,
         signDate,
         expiryDate,
@@ -1769,6 +1776,7 @@ async function saveExtractedContract() {
                 contractId,
                 title,
                 partner,
+                material,
                 value,
                 signDate,
                 expiryDate,
@@ -1841,6 +1849,7 @@ async function saveFileItemContract(fileItem) {
         contractId: contractId,
         title: data.title ? String(data.title) : '',
         partner: data.partner ? String(data.partner) : '',
+        material: data.material ? String(data.material) : '',
         value: Number(data.value) || 0,
         signDate: data.signDate || '',
         expiryDate: data.expiryDate || '',
@@ -1858,6 +1867,7 @@ async function saveFileItemContract(fileItem) {
                 contractId: newContract.contractId,
                 title: newContract.title,
                 partner: newContract.partner,
+                material: newContract.material,
                 value: newContract.value,
                 signDate: newContract.signDate,
                 expiryDate: newContract.expiryDate,
@@ -2280,11 +2290,13 @@ function renderContractsTable() {
         const titleStr = String(c.title || '');
         const partnerStr = String(c.partner || '');
         const summaryStr = String(c.summary || '');
+        const materialStr = String(c.material || '');
 
         const matchesSearch = contractIdStr.toLowerCase().includes(searchVal) || 
                               titleStr.toLowerCase().includes(searchVal) || 
                               partnerStr.toLowerCase().includes(searchVal) ||
-                              summaryStr.toLowerCase().includes(searchVal);
+                              summaryStr.toLowerCase().includes(searchVal) ||
+                              materialStr.toLowerCase().includes(searchVal);
         
         // Year filter
         const matchesYear = yearVal === 'all' || c.year === yearVal;
@@ -2385,6 +2397,7 @@ async function syncContractsWithGoogleSheets() {
                         contractId: extContractId,
                         title: ext.title ? String(ext.title) : "",
                         partner: ext.partner ? String(ext.partner) : "",
+                        material: ext.material ? String(ext.material) : "",
                         value: Number(ext.value) || 0,
                         signDate: ext.signDate ? parseGASDate(ext.signDate) : "",
                         expiryDate: ext.expiryDate ? parseGASDate(ext.expiryDate) : "",
@@ -2442,7 +2455,7 @@ function exportContractsToCSV() {
     
     // CSV Header row
     let csvContent = "\uFEFF"; // UTF-8 BOM representation for Excel compliance
-    csvContent += "Mã Hợp Đồng,Tên Hợp Đồng,Đối Tác,Giá Trị (VND),Ngày Ký,Ngày Hết Hạn,Năm Phân Loại,Đường dẫn Drive,Ngày Đồng Bộ\r\n";
+    csvContent += "Mã Hợp Đồng,Tên Hợp Đồng,Đối Tác,Tên hàng hóa/vật tư,Giá Trị (VND),Ngày Ký,Ngày Hết Hạn,Năm Phân Loại,Đường dẫn Drive,Ngày Đồng Bộ\r\n";
     
     state.contracts.forEach(c => {
         // Escaping comma and quotes
@@ -2450,6 +2463,7 @@ function exportContractsToCSV() {
             `"${c.contractId}"`,
             `"${c.title.replace(/"/g, '""')}"`,
             `"${c.partner.replace(/"/g, '""')}"`,
+            `"${(c.material || '').replace(/"/g, '""')}"`,
             c.value,
             c.signDate,
             c.expiryDate,
@@ -2604,6 +2618,7 @@ function openContractDetail(contractId) {
     document.getElementById("detail-contract-id").textContent = contract.contractId;
     document.getElementById("detail-title").textContent = contract.title;
     document.getElementById("detail-partner").textContent = contract.partner;
+    document.getElementById("detail-material").textContent = contract.material || "-";
     document.getElementById("detail-value").textContent = formatCurrency(contract.value);
     document.getElementById("detail-sign-date").textContent = formatDateDisplay(contract.signDate);
     document.getElementById("detail-expiry-date").textContent = formatDateDisplay(contract.expiryDate);
@@ -2713,6 +2728,7 @@ function openEditManualForm(contract) {
     document.getElementById("man-year").value = contract.year;
     document.getElementById("man-title").value = contract.title;
     document.getElementById("man-partner").value = contract.partner;
+    document.getElementById("man-material").value = contract.material || "";
     document.getElementById("man-value").value = contract.value;
     document.getElementById("man-sign-date").value = contract.signDate || "";
     document.getElementById("man-expiry-date").value = contract.expiryDate || "";
@@ -2726,6 +2742,7 @@ function saveManualContract() {
     const year = document.getElementById("man-year").value;
     const title = document.getElementById("man-title").value;
     const partner = document.getElementById("man-partner").value;
+    const material = document.getElementById("man-material").value;
     const value = Number(document.getElementById("man-value").value) || 0;
     const signDate = document.getElementById("man-sign-date").value;
     const expiryDate = document.getElementById("man-expiry-date").value;
@@ -2746,6 +2763,7 @@ function saveManualContract() {
         contractId,
         title,
         partner,
+        material,
         value,
         signDate,
         expiryDate,
