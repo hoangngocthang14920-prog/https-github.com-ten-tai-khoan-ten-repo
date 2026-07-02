@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Hợp đồng Thông minh AI - Causu68.vn</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons for premium modern look -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h2>Causu68.vn</h2>
+                        <span>AI ARCHIVE SYSTEM</span>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <ul>
+                    <li class="active" data-tab="dashboard">
+                        <a href="javascript:void(0)">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                    <li data-tab="ai-scanner">
+                        <a href="javascript:void(0)">
+                            <div class="scanner-menu-item">
+                                <i data-lucide="scan-line" class="scanning-icon"></i>
+                                <span>Tải lên & Quét AI</span>
+                            </div>
+                            <span class="badge badge-accent">New</span>
+                        </a>
+                    </li>
+                    <li data-tab="year-explorer">
+                        <a href="javascript:void(0)">
+                            <i data-lucide="folder-archive"></i>
+                            <span>Lưu trữ theo Năm</span>
+                        </a>
+                    </li>
+                    <li data-tab="contracts-list">
+                        <a href="javascript:void(0)">
+                            <i data-lucide="file-spreadsheet"></i>
+                            <span>Bảng Dữ liệu</span>
+                        </a>
+                    </li>
+                    <li data-tab="settings">
+                        <a href="javascript:void(0)">
+                            <i data-lucide="settings"></i>
+                            <span>Cấu hình Hệ thống</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="connection-status">
+                    <div class="status-item" id="google-status">
+                        <span class="status-indicator offline"></span>
+                        <span class="status-label">Google Sheet: Chưa kết nối</span>
+                    </div>
+                    <div class="status-item" id="gemini-status">
+                        <span class="status-indicator offline"></span>
+                        <span class="status-label">Gemini AI: Giả lập</span>
+                    </div>
+                </div>
+                <div class="author-info">
+                    <p>Phiên bản 1.0.0 • AI-Driven</p>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+            
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="page-title">Tổng quan hệ thống</h1>
+                    <p class="subtitle" id="page-subtitle">Thống kê và báo cáo hồ sơ hợp đồng qua các năm</p>
+                </div>
+                
+                <div class="topbar-right">
+                    <!-- Notification Bell -->
+                    <div class="notification-bell" id="expiry-alert-bell" title="Hợp đồng sắp hết hạn">
+                        <i data-lucide="bell"></i>
+                        <span class="bell-badge" style="display: none;">0</span>
+                        <div class="notification-dropdown" id="expiry-dropdown">
+                            <div class="dropdown-header">
+                                <h3>Cảnh báo hết hạn (30 ngày)</h3>
+                            </div>
+                            <div class="dropdown-list" id="expiry-alert-list">
+                                <div class="dropdown-empty">Không có hợp đồng nào sắp hết hạn</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Search -->
+                    <div class="topbar-search">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="quick-search-input" placeholder="Tìm nhanh mã, đối tác...">
+                    </div>
+                    
+                    <!-- Action Button -->
+                    <button class="btn btn-primary" id="btn-quick-upload">
+                        <i data-lucide="upload-cloud"></i>
+                        <span>Thêm Hợp Đồng</span>
+                    </button>
+                    
+                    <!-- Theme Toggle -->
+                    <button class="btn-theme-toggle" id="theme-toggle-btn" title="Chuyển chế độ Sáng/Tối">
+                        <i data-lucide="sun"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- CONTENT TABS -->
+            <div class="tab-viewport">
+                
+                <!-- TAB 1: DASHBOARD -->
+                <section class="tab-content active" id="tab-dashboard">
+                    <!-- Stat Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-icon card-purple">
+                                <i data-lucide="files"></i>
+                            </div>
+                            <div class="stat-card-data">
+                                <h3>Tổng số hợp đồng</h3>
+                                <p class="stat-value" id="stat-total-contracts">0</p>
+                                <span class="stat-trend trend-up"><i data-lucide="arrow-up-right"></i> <span id="stat-contracts-trend">Hoạt động ổn định</span></span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-icon card-emerald">
+                                <i data-lucide="badge-dollar-sign"></i>
+                            </div>
+                            <div class="stat-card-data">
+                                <h3>Tổng giá trị hợp đồng</h3>
+                                <p class="stat-value" id="stat-total-value">0 ₫</p>
+                                <span class="stat-trend trend-up"><i data-lucide="trending-up"></i> Tích lũy qua các năm</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-icon card-blue">
+                                <i data-lucide="check-circle-2"></i>
+                            </div>
+                            <div class="stat-card-data">
+                                <h3>Đang có hiệu lực</h3>
+                                <p class="stat-value" id="stat-active-contracts">0</p>
+                                <span class="stat-trend trend-neutral" id="stat-active-percent">0% tổng số</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-icon card-orange">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                            <div class="stat-card-data">
+                                <h3>Sắp hết hạn / Cần xử lý</h3>
+                                <p class="stat-value text-warning" id="stat-warning-contracts">0</p>
+                                <span class="stat-trend trend-down text-warning" id="stat-warning-desc">Hết hạn trong 30 ngày</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Grid -->
+                    <div class="dashboard-grid">
+                        <div class="chart-container grid-col-8">
+                            <div class="chart-header">
+                                <h3>Giá trị hợp đồng tích lũy qua các năm</h3>
+                                <div class="chart-actions">
+                                    <span class="legend-dot bg-indigo"></span> <span>Giá trị (Triệu VNĐ)</span>
+                                </div>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="chart-value-by-year"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container grid-col-4">
+                            <div class="chart-header">
+                                <h3>Cơ cấu trạng thái hợp đồng</h3>
+                            </div>
+                            <div class="chart-body doughnut-chart-wrapper">
+                                <canvas id="chart-status-distribution"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bottom Grid -->
+                    <div class="dashboard-grid margin-top-lg">
+                        <!-- Recent Activity / Contracts -->
+                        <div class="card grid-col-7">
+                            <div class="card-header">
+                                <h3>Hợp đồng mới đồng bộ gần đây</h3>
+                                <a href="javascript:void(0)" class="card-link" onclick="switchTab('contracts-list')">Xem tất cả</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table-minimal">
+                                        <thead>
+                                            <tr>
+                                                <th>Số hợp đồng</th>
+                                                <th>Đối tác</th>
+                                                <th>Năm</th>
+                                                <th>Giá trị (VND)</th>
+                                                <th>Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recent-contracts-tbody">
+                                            <!-- Dynamic content -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Upload Info & Alerts -->
+                        <div class="card grid-col-5">
+                            <div class="card-header">
+                                <h3>Thông tin Lưu trữ AI</h3>
+                            </div>
+                            <div class="card-body flex-column-gap">
+                                <div class="ai-info-box">
+                                    <div class="ai-info-icon">
+                                        <i data-lucide="cpu"></i>
+                                    </div>
+                                    <div class="ai-info-text">
+                                        <h4>Phân loại tự động theo Năm</h4>
+                                        <p>Hệ thống tự động sử dụng trí tuệ nhân tạo Gemini để nhận diện nội dung hợp đồng và di chuyển tệp tin vào đúng thư mục các năm <strong>2024</strong>, <strong>2025</strong> hoặc <strong>2026</strong> trên Drive.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="quick-stats-list">
+                                    <div class="quick-stat-item">
+                                        <div class="item-label">
+                                            <span class="folder-badge badge-2024">2024</span>
+                                            <span>Thư mục Năm 2024</span>
+                                        </div>
+                                        <span class="item-value" id="count-year-2024">0 hợp đồng</span>
+                                    </div>
+                                    <div class="quick-stat-item">
+                                        <div class="item-label">
+                                            <span class="folder-badge badge-2025">2025</span>
+                                            <span>Thư mục Năm 2025</span>
+                                        </div>
+                                        <span class="item-value" id="count-year-2025">0 hợp đồng</span>
+                                    </div>
+                                    <div class="quick-stat-item">
+                                        <div class="item-label">
+                                            <span class="folder-badge badge-2026">2026</span>
+                                            <span>Thư mục Năm 2026</span>
+                                        </div>
+                                        <span class="item-value" id="count-year-2026">0 hợp đồng</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- TAB 2: AI SCANNER -->
+                <section class="tab-content" id="tab-ai-scanner">
+                    <div class="scanner-layout">
+                        
+                        <!-- Upload & File Preview Zone -->
+                        <div class="scanner-left-panel">
+                            <div class="card full-height">
+                                <div class="card-header">
+                                    <h3>Tải tệp tin Scan (PDF / Ảnh)</h3>
+                                </div>
+                                <div class="card-body upload-body">
+                                    <div class="drag-drop-zone" id="drop-zone">
+                                        <input type="file" id="file-input" accept="image/*,application/pdf" multiple style="display:none">
+                                        <div class="drag-drop-content">
+                                            <div class="upload-icon">
+                                                <i data-lucide="file-up"></i>
+                                            </div>
+                                            <h4>Kéo thả tệp tin scan hợp đồng vào đây</h4>
+                                            <p>Hoặc nhấp chuột để chọn từ máy tính</p>
+                                            <span class="support-formats">Hỗ trợ định dạng: PDF, PNG, JPG, JPEG (Tối đa 100 tệp cùng lúc, tối đa 15MB/tệp)</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Hàng đợi quét hàng loạt -->
+                                    <div class="batch-queue-container" id="batch-queue-container" style="display: none;">
+                                        <div class="batch-header">
+                                            <h4>Hàng đợi quét hàng loạt (<span id="batch-count">0</span> tệp)</h4>
+                                            <div class="batch-progress-text" id="batch-progress-text">Đang chờ quét...</div>
+                                        </div>
+                                        <div class="progress-bar-container">
+                                            <div class="progress-bar-fill" id="batch-progress-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <div class="batch-file-list" id="batch-file-list">
+                                            <!-- Được render bằng JavaScript -->
+                                        </div>
+                                        <div class="batch-actions">
+                                            <button class="btn btn-accent btn-full" id="btn-start-batch-scan">
+                                                <i data-lucide="play"></i> Quét hàng loạt
+                                            </button>
+                                            <button class="btn btn-secondary-soft btn-full" id="btn-clear-batch">
+                                                <i data-lucide="trash-2"></i> Xóa tất cả
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- File Preview Info -->
+                                    <div class="file-preview-card" id="file-preview-card" style="display: none;">
+                                        <div class="file-preview-info">
+                                            <div class="file-icon" id="file-preview-icon">
+                                                <i data-lucide="file-text"></i>
+                                            </div>
+                                            <div class="file-metadata">
+                                                <h4 id="preview-file-name">hopdong_doitac_2025.pdf</h4>
+                                                <p id="preview-file-size">2.4 MB</p>
+                                            </div>
+                                            <button class="btn-icon btn-danger-soft" id="btn-remove-file" title="Xóa file">
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Visual scanner overlay animation -->
+                                        <div class="preview-visual-box" id="preview-visual-box">
+                                            <div class="document-placeholder">
+                                                <i data-lucide="file-text" class="placeholder-icon"></i>
+                                                <span class="placeholder-text">Tài liệu đã sẵn sàng phân tích</span>
+                                            </div>
+                                            <div class="scanning-bar" id="scanning-bar" style="display: none;"></div>
+                                        </div>
+                                        
+                                        <button class="btn btn-accent btn-full margin-top-md" id="btn-start-scan">
+                                            <i data-lucide="cpu"></i>
+                                            <span>Trích xuất & Phân loại bằng AI</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Processing Console -->
+                                    <div class="ai-console-card" id="ai-console-card" style="display: none;">
+                                        <h4>Trình tự xử lý của AI</h4>
+                                        <div class="console-steps">
+                                            <div class="console-step" id="step-1">
+                                                <div class="step-spinner"></div>
+                                                <i data-lucide="check-circle" class="step-success-icon" style="display: none;"></i>
+                                                <span>Đang đọc và quét OCR văn bản tài liệu...</span>
+                                            </div>
+                                            <div class="console-step" id="step-2">
+                                                <div class="step-spinner"></div>
+                                                <i data-lucide="check-circle" class="step-success-icon" style="display: none;"></i>
+                                                <span>Phân tích các điều khoản và trích xuất thực thể...</span>
+                                            </div>
+                                            <div class="console-step" id="step-3">
+                                                <div class="step-spinner"></div>
+                                                <i data-lucide="check-circle" class="step-success-icon" style="display: none;"></i>
+                                                <span>Đối soát cấu trúc và tự động xác định Năm phân loại...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Extraction Result Form -->
+                        <div class="scanner-right-panel">
+                            <div class="card full-height">
+                                <div class="card-header">
+                                    <h3>Kết quả trích xuất AI</h3>
+                                    <span class="badge badge-accent" id="scan-status-badge">Chờ tải file</span>
+                                </div>
+                                <div class="card-body">
+                                    <form id="ai-extraction-form">
+                                        <div class="form-row-2">
+                                            <div class="form-group">
+                                                <label for="ext-contract-id">Số / Mã Hợp Đồng <span class="text-danger">*</span></label>
+                                                <input type="text" id="ext-contract-id" placeholder="Chưa trích xuất" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="ext-year">Năm Phân Loại <span class="text-danger">*</span></label>
+                                                <select id="ext-year" required>
+                                                    <option value="">Chọn năm...</option>
+                                                    <option value="2024">2024 (Thư mục 2024)</option>
+                                                    <option value="2025">2025 (Thư mục 2025)</option>
+                                                    <option value="2026">2026 (Thư mục 2026)</option>
+                                                    <option value="Khác">Khác / Chưa xác định</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="ext-title">Tên / Tiêu Đề Hợp Đồng <span class="text-danger">*</span></label>
+                                            <input type="text" id="ext-title" placeholder="Chưa trích xuất" required>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="ext-partner">Đối Tác Ký Kết <span class="text-danger">*</span></label>
+                                            <input type="text" id="ext-partner" placeholder="Chưa trích xuất" required>
+                                        </div>
+                                        
+                                        <div class="form-row-2">
+                                            <div class="form-group">
+                                                <label for="ext-invoice-number">Số hóa đơn</label>
+                                                <input type="text" id="ext-invoice-number" placeholder="Chưa trích xuất">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="ext-hs-code">Mã HS Code</label>
+                                                <input type="text" id="ext-hs-code" placeholder="Chưa trích xuất">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-row-3">
+                                            <div class="form-group">
+                                                <label for="ext-value">Giá trị hợp đồng (VND)</label>
+                                                <input type="number" id="ext-value" placeholder="Chưa trích xuất" value="0">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="ext-sign-date">Ngày Ký</label>
+                                                <input type="date" id="ext-sign-date">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="ext-expiry-date">Ngày Hết Hạn</label>
+                                                <input type="date" id="ext-expiry-date">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="ext-summary">Tóm tắt điều khoản chính (AI tóm tắt)</label>
+                                            <textarea id="ext-summary" rows="4" placeholder="AI sẽ tóm tắt nội dung chính, quyền và nghĩa vụ quan trọng của các bên..."></textarea>
+                                        </div>
+                                        
+                                        <div class="form-actions-row">
+                                            <div class="auto-sync-option">
+                                                <label class="toggle-switch">
+                                                    <input type="checkbox" id="sync-to-google-checkbox" checked>
+                                                    <span class="toggle-slider"></span>
+                                                </label>
+                                                <span class="toggle-label">Đồng bộ trực tiếp lên Google Drive & Sheet</span>
+                                            </div>
+                                            
+                                            <button type="submit" class="btn btn-emerald" id="btn-save-extracted" disabled>
+                                                <i data-lucide="check-square"></i>
+                                                <span>Lưu vào hệ thống</span>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- BATCH SAVE SECTION -->
+                                        <div class="batch-save-section" id="batch-save-section" style="display: none;">
+                                            <div class="batch-save-header">
+                                                <div class="batch-save-select-all">
+                                                    <label class="custom-checkbox">
+                                                        <input type="checkbox" id="batch-select-all-checkbox">
+                                                        <span class="checkmark"></span>
+                                                    </label>
+                                                    <span class="batch-save-label">Chọn tất cả mục đã quét xong</span>
+                                                </div>
+                                                <span class="batch-save-count" id="batch-save-count">0 / 0 đã chọn</span>
+                                            </div>
+                                            <div class="batch-save-list" id="batch-save-list">
+                                                <!-- Dynamic content from JS -->
+                                            </div>
+                                            <div class="batch-save-actions">
+                                                <button type="button" class="btn btn-emerald btn-full" id="btn-batch-save" disabled>
+                                                    <i data-lucide="upload-cloud"></i>
+                                                    <span>Lưu các mục đã chọn vào hệ thống</span>
+                                                </button>
+                                            </div>
+                                            <!-- Batch save progress -->
+                                            <div class="batch-save-progress" id="batch-save-progress" style="display: none;">
+                                                <div class="batch-save-progress-header">
+                                                    <span class="batch-save-progress-text" id="batch-save-progress-text">Đang lưu...</span>
+                                                    <span class="batch-save-progress-percent" id="batch-save-progress-percent">0%</span>
+                                                </div>
+                                                <div class="progress-bar-container">
+                                                    <div class="progress-bar-fill batch-save-fill" id="batch-save-progress-fill" style="width: 0%;"></div>
+                                                </div>
+                                                <div class="batch-save-log" id="batch-save-log">
+                                                    <!-- Dynamic log items -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+                                    <div class="gemini-api-helper-box margin-top-md" id="gemini-key-missing-warning">
+                                        <i data-lucide="info" class="text-warning"></i>
+                                        <div class="helper-text">
+                                            <strong>Lưu ý:</strong> Bạn đang ở chế độ <strong>Giả lập AI</strong>. Ứng dụng sẽ tự động mô phỏng việc trích xuất văn bản. Để chạy thực tế trên dữ liệu thật của bạn, hãy nhập <strong>Gemini API Key</strong> trong tab <a href="javascript:void(0)" onclick="switchTab('settings')">Cấu hình</a>.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- TAB 3: YEAR EXPLORER -->
+                <section class="tab-content" id="tab-year-explorer">
+                    <div class="year-explorer-container">
+                        <!-- Left Navigation: Folders -->
+                        <div class="year-folders-sidebar">
+                            <div class="card full-height">
+                                <div class="card-header">
+                                    <h3>Thư mục hồ sơ</h3>
+                                    <button class="btn btn-sm btn-secondary-soft" id="btn-add-folder" title="Thêm thư mục mới">
+                                        <i data-lucide="folder-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body no-padding">
+                                    <div class="folder-list" id="folder-list-container">
+                                        <!-- Dynamic folder items rendered by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FOLDER CONTEXT MENU (right-click) -->
+                        <div class="folder-context-menu" id="folder-context-menu">
+                            <div class="ctx-item" id="ctx-add-subfolder">
+                                <i data-lucide="folder-plus"></i>
+                                <span>Thêm thư mục con</span>
+                            </div>
+                            <div class="ctx-item" id="ctx-rename-folder">
+                                <i data-lucide="pencil"></i>
+                                <span>Đổi tên thư mục</span>
+                            </div>
+                            <div class="ctx-divider"></div>
+                            <div class="ctx-item ctx-danger" id="ctx-delete-folder">
+                                <i data-lucide="trash-2"></i>
+                                <span>Xóa thư mục</span>
+                            </div>
+                        </div>
+
+                        <!-- FOLDER MODAL (Add/Rename) -->
+                        <div class="modal-backdrop" id="folder-modal">
+                            <div class="modal-container modal-small">
+                                <div class="modal-header">
+                                    <h3 id="folder-modal-title">Thêm thư mục mới</h3>
+                                    <button class="modal-close" id="btn-close-folder-modal">
+                                        <i data-lucide="x"></i>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="folder-modal-name">Tên thư mục</label>
+                                        <input type="text" id="folder-modal-name" placeholder="Nhập tên thư mục..." maxlength="50">
+                                    </div>
+                                    <div class="form-group" id="folder-modal-color-group">
+                                        <label>Màu sắc nhận diện</label>
+                                        <div class="folder-color-picker" id="folder-color-picker">
+                                            <div class="color-swatch active" data-color="#6366f1" style="background:#6366f1;" title="Indigo"></div>
+                                            <div class="color-swatch" data-color="#a855f7" style="background:#a855f7;" title="Tím"></div>
+                                            <div class="color-swatch" data-color="#0ea5e9" style="background:#0ea5e9;" title="Xanh dương"></div>
+                                            <div class="color-swatch" data-color="#10b981" style="background:#10b981;" title="Xanh lá"></div>
+                                            <div class="color-swatch" data-color="#f97316" style="background:#f97316;" title="Cam"></div>
+                                            <div class="color-swatch" data-color="#ef4444" style="background:#ef4444;" title="Đỏ"></div>
+                                            <div class="color-swatch" data-color="#ec4899" style="background:#ec4899;" title="Hồng"></div>
+                                            <div class="color-swatch" data-color="#14b8a6" style="background:#14b8a6;" title="Teal"></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="folder-modal-parent-group" style="display:none;">
+                                        <label>Thư mục cha</label>
+                                        <input type="text" id="folder-modal-parent-name" readonly disabled>
+                                    </div>
+                                    <div class="modal-footer no-padding margin-top-md">
+                                        <button type="button" class="btn btn-secondary" id="btn-cancel-folder-modal">Hủy bỏ</button>
+                                        <button type="button" class="btn btn-emerald" id="btn-save-folder-modal">
+                                            <i data-lucide="check"></i> Xác nhận
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right panel: Document Grid inside folder -->
+                        <div class="year-folder-contents">
+                            <div class="folder-header-bar">
+                                <div class="folder-title-area">
+                                    <i data-lucide="folder-open" id="current-folder-icon" class="folder-title-icon"></i>
+                                    <h2 id="current-folder-title">Tất cả các năm</h2>
+                                </div>
+                                <div class="folder-actions">
+                                    <span class="folder-path-label">Đường dẫn Google Drive: </span>
+                                    <span class="folder-path-value" id="google-drive-path">/Hồ Sơ Hợp Đồng - Quản Lý/</span>
+                                </div>
+                            </div>
+                            
+                            <div class="document-grid" id="folder-document-grid">
+                                <!-- Dynamic document cards populated by JS -->
+                            </div>
+                            
+                            <div class="empty-folder-state" id="empty-folder-state" style="display: none;">
+                                <i data-lucide="folder-search"></i>
+                                <h3>Không có hợp đồng nào trong thư mục này</h3>
+                                <p>Hãy chuyển sang tab "Tải lên & Quét AI" để thêm tài liệu mới cho năm này.</p>
+                                <button class="btn btn-primary btn-sm margin-top-sm" onclick="switchTab('ai-scanner')">
+                                    <i data-lucide="plus"></i> Quét hợp đồng mới
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- TAB 4: CONTRACTS LIST -->
+                <section class="tab-content" id="tab-contracts-list">
+                    <div class="card">
+                        <div class="table-controls-bar">
+                            <!-- Filters -->
+                            <div class="filters-group">
+                                <div class="search-box">
+                                    <i data-lucide="search"></i>
+                                    <input type="text" id="filter-search-input" placeholder="Tìm kiếm mã, tên hợp đồng, đối tác...">
+                                </div>
+                                
+                                <div class="filter-select">
+                                    <i data-lucide="calendar"></i>
+                                    <select id="filter-year-select">
+                                        <option value="all">Tất cả các năm</option>
+                                        <option value="2026">Năm 2026</option>
+                                        <option value="2025">Năm 2025</option>
+                                        <option value="2024">Năm 2024</option>
+                                        <option value="Khác">Khác / Chưa phân loại</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-select">
+                                    <i data-lucide="shield-alert"></i>
+                                    <select id="filter-status-select">
+                                        <option value="all">Tất cả trạng thái</option>
+                                        <option value="active">Đang hiệu lực</option>
+                                        <option value="expiring">Sắp hết hạn (&lt;30 ngày)</option>
+                                        <option value="expired">Hết hiệu lực</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="table-actions-group">
+                                <button class="btn btn-secondary" id="btn-export-csv" title="Xuất toàn bộ bảng ra file CSV">
+                                    <i data-lucide="download"></i>
+                                    <span>Xuất Excel/CSV</span>
+                                </button>
+                                <button class="btn btn-secondary-soft" id="btn-sync-now" title="Đồng bộ trực tiếp từ Google Sheet">
+                                    <i data-lucide="refresh-cw"></i>
+                                    <span>Đồng bộ ngay</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive-wrapper">
+                            <table class="table-main" id="contracts-table">
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" data-sort="contractId">Mã Hợp Đồng <i data-lucide="chevrons-up-down"></i></th>
+                                        <th class="sortable" data-sort="title">Tên Hợp Đồng <i data-lucide="chevrons-up-down"></i></th>
+                                        <th class="sortable" data-sort="partner">Đối Tác Ký Kết <i data-lucide="chevrons-up-down"></i></th>
+                                        <th class="sortable" data-sort="value">Giá trị (VND) <i data-lucide="chevrons-up-down"></i></th>
+                                        <th class="sortable" data-sort="signDate">Ngày Ký <i data-lucide="chevrons-up-down"></i></th>
+                                        <th class="sortable" data-sort="expiryDate">Ngày Hết Hạn <i data-lucide="chevrons-up-down"></i></th>
+                                        <th class="sortable" data-sort="year">Năm <i data-lucide="chevrons-up-down"></i></th>
+                                        <th>Drive Link</th>
+                                        <th>Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contracts-tbody">
+                                    <!-- Dynamic rows from JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="table-footer-bar">
+                            <span class="pagination-info" id="pagination-info">Hiển thị 0 trên 0 hợp đồng</span>
+                            <div class="pagination-buttons" id="pagination-buttons">
+                                <!-- Pagination controls -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- TAB 5: SETTINGS -->
+                <section class="tab-content" id="tab-settings" style="position: relative;">
+                    
+                    <!-- LOCK SCREEN OVERLAY -->
+                    <div class="settings-lock-overlay" id="settings-lock-overlay">
+                        <div class="lock-card">
+                            <div class="lock-icon-wrapper">
+                                <i data-lucide="lock"></i>
+                            </div>
+                            <h3>Bảo mật Cấu hình Hệ thống</h3>
+                            <p>Vui lòng nhập mật khẩu quản trị viên để mở khóa và chỉnh sửa cấu hình hệ thống.</p>
+                            
+                            <div class="lock-input-group">
+                                <div class="input-password-wrapper">
+                                    <input type="password" id="settings-admin-password" placeholder="Nhập mật khẩu truy cập...">
+                                    <button type="button" class="btn-toggle-password" id="btn-toggle-admin-password">
+                                        <i data-lucide="eye"></i>
+                                    </button>
+                                </div>
+                                <span class="error-text" id="settings-lock-error" style="display: none; color: var(--color-danger); font-size: 12px; margin-top: 8px; text-align: center;">Mật khẩu không chính xác!</span>
+                            </div>
+                            
+                            <button class="btn btn-primary" id="btn-unlock-settings" style="width: 100%; justify-content: center;">
+                                <i data-lucide="unlock"></i> Xác nhận Đăng nhập
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid" id="settings-main-grid" style="display: none;">
+                        
+                        <!-- Unlocked Info Bar -->
+                        <div class="unlocked-info-bar">
+                            <div class="unlocked-status">
+                                <i data-lucide="unlock"></i>
+                                <span>Đã xác thực quản trị viên (Quyền cấu hình hệ thống)</span>
+                            </div>
+                            <button class="btn btn-danger-soft btn-sm" id="btn-lock-settings" style="gap: 6px;">
+                                <i data-lucide="lock"></i> Khóa cấu hình
+                            </button>
+                        </div>
+                        
+                        <!-- AI Settings -->
+                        <div class="card">
+                            <div class="card-header border-bottom">
+                                <i data-lucide="cpu" class="header-icon text-accent"></i>
+                                <h3>Cấu hình Trí tuệ nhân tạo Gemini AI</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="settings-description">Ứng dụng sử dụng mô hình <strong>Gemini 1.5 Flash</strong> của Google để thực hiện nhận diện văn bản OCR và trích xuất dữ liệu tự động từ tài liệu scan của bạn.</p>
+                                
+                                <div class="form-group margin-top-md">
+                                    <label for="settings-gemini-key">Gemini API Key</label>
+                                    <div class="input-password-wrapper">
+                                        <input type="password" id="settings-gemini-key" placeholder="Nhập API Key từ Google AI Studio">
+                                        <button class="btn-toggle-password" id="btn-toggle-gemini-key" type="button">
+                                            <i data-lucide="eye"></i>
+                                        </button>
+                                    </div>
+                                    <span class="input-help">Lưu ý: API Key của bạn được lưu an toàn trực tiếp trên trình duyệt của bạn (LocalStorage) và không bao giờ gửi đi bất kỳ server trung gian nào khác ngoài API chính thức của Google.</span>
+                                </div>
+
+                                <div class="form-row-2 margin-top-md">
+                                    <div class="form-group">
+                                        <label for="settings-gemini-model">Mô hình AI (Gemini Model)</label>
+                                        <select id="settings-gemini-model">
+                                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Mặc định)</option>
+                                            <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</option>
+                                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                                            <option value="custom">Tự cấu hình ID...</option>
+                                        </select>
+                                        <input type="text" id="settings-gemini-model-custom" placeholder="Nhập Model ID (ví dụ: gemini-2.5-flash)" style="display:none; margin-top:8px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="settings-gemini-api-version">Phiên bản API (API Version)</label>
+                                        <select id="settings-gemini-api-version">
+                                            <option value="v1beta">v1beta (Khuyên dùng)</option>
+                                            <option value="v1">v1 (Bản ổn định)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="api-guide-box">
+                                    <h5>Cách lấy Gemini API Key miễn phí:</h5>
+                                    <ol>
+                                        <li>Truy cập trang web <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Google AI Studio</a>.</li>
+                                        <li>Đăng nhập bằng tài khoản Google của bạn.</li>
+                                        <li>Nhấp vào nút <strong>"Get API key"</strong> ở thanh menu bên trái.</li>
+                                        <li>Nhấp <strong>"Create API key"</strong>, chọn dự án và copy mã Key được cấp rồi dán vào ô bên trên.</li>
+                                    </ol>
+                                </div>
+                                
+                                <button class="btn btn-primary margin-top-md" id="btn-save-gemini-key">
+                                    <i data-lucide="save"></i> Lưu Cấu Hình AI
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Integration Settings -->
+                        <div class="card">
+                            <div class="card-header border-bottom">
+                                <i data-lucide="file-spreadsheet" class="header-icon text-emerald"></i>
+                                <h3>Đồng bộ Google Sheets & Drive API</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="settings-description">Kết nối ứng dụng với trang tính Google Sheets và lưu trữ tệp trên Google Drive của bạn thông qua Google Apps Script.</p>
+                                
+                                <div class="form-group margin-top-md">
+                                    <label for="settings-gas-url">Google Apps Script Web App URL</label>
+                                    <input type="url" id="settings-gas-url" placeholder="https://script.google.com/macros/s/.../exec">
+                                    <span class="input-help">Dán đường dẫn Deployment Web App của Apps Script sau khi bạn đã xuất bản dưới dạng Web App. Xem chi tiết file hướng dẫn đính kèm.</span>
+                                </div>
+                                
+                                <div class="integration-actions margin-top-md">
+                                    <button class="btn btn-emerald" id="btn-save-gas-url">
+                                        <i data-lucide="save"></i> Lưu Cấu Hình Kết Nối
+                                    </button>
+                                    <button class="btn btn-secondary-soft" id="btn-test-gas-connection">
+                                        <i data-lucide="refresh-cw"></i> Kiểm tra kết nối
+                                    </button>
+                                </div>
+                                
+                                <div class="gas-deployment-guide margin-top-lg">
+                                    <h5>Quy trình liên kết với Google Drive của bạn:</h5>
+                                    <div class="steps-progress-vertical">
+                                        <div class="v-step">
+                                            <span class="v-step-num">1</span>
+                                            <p>Copy mã nguồn trong tệp <strong>google_apps_script.js</strong> được tạo trong dự án này.</p>
+                                        </div>
+                                        <div class="v-step">
+                                            <span class="v-step-num">2</span>
+                                            <p>Vào Google Sheet của bạn -> Chọn <strong>Tiện ích mở rộng</strong> -> <strong>Apps Script</strong> -> Dán đè mã nguồn vào file Code.gs rồi bấm lưu.</p>
+                                        </div>
+                                        <div class="v-step">
+                                            <span class="v-step-num">3</span>
+                                            <p>Nhấp <strong>Triển khai (Deploy)</strong> -> <strong>Triển khai mới (New deployment)</strong> -> Loại: <strong>Ứng dụng web (Web app)</strong> -> Cấp quyền cho <strong>"Bất kỳ ai (Anyone)"</strong> truy cập -> Deploy và copy URL điền vào ô bên trên.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- System Controls / Reset -->
+                        <div class="card grid-col-2">
+                            <div class="card-header border-bottom">
+                                <i data-lucide="sliders" class="header-icon text-red"></i>
+                                <h3>Quản trị hệ thống & Dữ liệu</h3>
+                            </div>
+                            <div class="card-body admin-controls">
+                                <div class="admin-control-item">
+                                    <div class="control-text">
+                                        <h4>Reset Cơ sở dữ liệu cục bộ</h4>
+                                        <p>Xóa sạch dữ liệu lưu trữ LocalStorage và nạp lại danh sách hợp đồng mẫu ban đầu của hệ thống. Hành động này không ảnh hưởng đến dữ liệu trên Google Sheets của bạn.</p>
+                                    </div>
+                                    <button class="btn btn-danger-soft" id="btn-reset-db">
+                                        <i data-lucide="rotate-ccw"></i> Reset Local Storage
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </section>
+                
+            </div>
+        </main>
+    </div>
+    
+    <!-- CONTRACT DETAIL DIALOG -->
+    <div class="modal-backdrop" id="contract-detail-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <span class="folder-badge badge-2025" id="detail-badge-year">2025</span>
+                    <h3 id="detail-contract-id">HD-2025-001</h3>
+                </div>
+                <button class="modal-close" id="btn-close-detail-modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <h2 class="detail-title" id="detail-title">Hợp đồng mua bán thiết bị văn phòng công ty</h2>
+                
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <div class="detail-field">
+                            <span class="field-label">Đối Tác Ký Kết:</span>
+                            <span class="field-value highlight" id="detail-partner">Công ty TNHH MTV Thiết Bị Số</span>
+                        </div>
+                        
+                        <div class="detail-field">
+                            <span class="field-label">Giá Trị Hợp Đồng:</span>
+                            <span class="field-value value-lg text-emerald" id="detail-value">150,000,000 ₫</span>
+                        </div>
+                        
+                        <div class="detail-row-2">
+                            <div class="detail-field">
+                                <span class="field-label">Ngày Ký:</span>
+                                <span class="field-value" id="detail-sign-date">12/01/2025</span>
+                            </div>
+                            <div class="detail-field">
+                                <span class="field-label">Ngày Hết Hạn:</span>
+                                <span class="field-value" id="detail-expiry-date">12/01/2026</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row-2 margin-top-sm">
+                            <div class="detail-field">
+                                <span class="field-label">Số Hóa Đơn:</span>
+                                <span class="field-value" id="detail-invoice-number">-</span>
+                            </div>
+                            <div class="detail-field">
+                                <span class="field-label">Mã HS Code:</span>
+                                <span class="field-value" id="detail-hs-code">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section flex-center">
+                        <div class="timeline-status-card" id="detail-status-card">
+                            <div class="status-icon">
+                                <i data-lucide="check-circle" id="detail-status-icon"></i>
+                            </div>
+                            <h4 id="detail-status-label">ĐANG CÓ HIỆU LỰC</h4>
+                            <p id="detail-time-remaining">Còn lại 180 ngày</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-full-width">
+                    <h4 class="section-title">Tóm tắt điều khoản quan trọng (AI Trích Xuất)</h4>
+                    <p class="detail-summary-text" id="detail-summary">Chưa có bản tóm tắt cho hợp đồng này.</p>
+                </div>
+                
+                <div class="detail-full-width margin-top-md" id="detail-drive-file-section">
+                    <h4 class="section-title">Tệp tin đính kèm trên Google Drive</h4>
+                    <div class="drive-link-box">
+                        <div class="drive-file-info">
+                            <img src="https://ssl.gstatic.com/docs/doclist/images/icon_10_pdf_list.png" alt="PDF Icon" class="file-icon-img" id="detail-file-icon-img">
+                            <div>
+                                <h5 id="detail-file-name">HD-2025-001 - Thiet Bi Van Phong.pdf</h5>
+                                <p>Lưu trữ tại: /Hồ Sơ Hợp Đồng - Quản Lý/2025/</p>
+                            </div>
+                        </div>
+                        <a href="#" target="_blank" class="btn btn-emerald-soft btn-sm" id="detail-btn-open-drive">
+                            <i data-lucide="external-link"></i>
+                            <span>Xem trên Google Drive</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-edit-contract-detail">
+                    <i data-lucide="edit"></i> Chỉnh sửa
+                </button>
+                <button class="btn btn-danger-soft" id="btn-delete-contract-detail">
+                    <i data-lucide="trash-2"></i> Xóa hợp đồng
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QUICK UPLOAD / MANUALLY ADD CONTRACT DIALOG -->
+    <div class="modal-backdrop" id="manual-upload-modal">
+        <div class="modal-container modal-medium">
+            <div class="modal-header">
+                <h3>Thêm hồ sơ hợp đồng mới</h3>
+                <button class="modal-close" id="btn-close-manual-modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="manual-contract-form">
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="man-contract-id">Số / Mã Hợp Đồng <span class="text-danger">*</span></label>
+                            <input type="text" id="man-contract-id" placeholder="VD: HD-2026-091" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="man-year">Năm Phân Loại <span class="text-danger">*</span></label>
+                            <select id="man-year" required>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="Khác">Khác / Chưa phân loại</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="man-title">Tên / Tiêu đề Hợp đồng <span class="text-danger">*</span></label>
+                        <input type="text" id="man-title" placeholder="VD: Hợp đồng cho thuê văn phòng năm 2026" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="man-partner">Đối Tác Ký Kết <span class="text-danger">*</span></label>
+                        <input type="text" id="man-partner" placeholder="VD: Công ty TNHH Địa ốc An Gia" required>
+                    </div>
+                    
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="man-invoice-number">Số hóa đơn</label>
+                            <input type="text" id="man-invoice-number" placeholder="VD: INV-2026-001">
+                        </div>
+                        <div class="form-group">
+                            <label for="man-hs-code">Mã HS Code</label>
+                            <input type="text" id="man-hs-code" placeholder="VD: 8471.30.10">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label for="man-value">Giá trị (VND)</label>
+                            <input type="number" id="man-value" placeholder="Nhập số tiền" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="man-sign-date">Ngày Ký</label>
+                            <input type="date" id="man-sign-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="man-expiry-date">Ngày Hết Hạn</label>
+                            <input type="date" id="man-expiry-date">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="man-summary">Tóm tắt điều khoản quan trọng</label>
+                        <textarea id="man-summary" rows="3" placeholder="Nhập tóm tắt các điều khoản cốt lõi của hợp đồng..."></textarea>
+                    </div>
+                    
+                    <div class="modal-footer no-padding margin-top-md">
+                        <button type="button" class="btn btn-secondary" id="btn-cancel-manual">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-emerald">Lưu Hợp Đồng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TOAST NOTIFICATIONS CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <!-- Javascript Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
