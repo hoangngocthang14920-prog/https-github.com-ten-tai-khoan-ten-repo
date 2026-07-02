@@ -1,80 +1,6 @@
 // STATE MANAGEMENT & INITIAL SEED DATA
-const MOCK_CONTRACTS = [
-    {
-        contractId: "HD-2024-001",
-        title: "Hợp đồng Thuê Máy Chủ và Cloud VPS",
-        partner: "Công ty Cổ phần VNG Cloud",
-        value: 144000000,
-        signDate: "2024-01-15",
-        expiryDate: "2025-01-15",
-        year: "2024",
-        fileUrl: "https://drive.google.com/file/d/mock_id_2024_01/view",
-        summary: "Cung cấp hệ thống máy chủ đám mây ảo VPS cho phòng ban Kỹ thuật và Vận hành. Giá trị thanh toán định kỳ hàng tháng. Băng thông tối thiểu cam kết 100Mbps.",
-        invoiceNumber: "INV-2024-001",
-        hsCode: "8471.30.10",
-        syncDate: "2026-07-01 10:00:00"
-    },
-    {
-        contractId: "HD-2024-002",
-        title: "Hợp đồng Mua bán Thiết bị Văn phòng",
-        partner: "Công ty TNHH Thương mại Trần Anh",
-        value: 85000000,
-        signDate: "2024-06-20",
-        expiryDate: "2024-12-20",
-        year: "2024",
-        fileUrl: "https://drive.google.com/file/d/mock_id_2024_02/view",
-        summary: "Cung cấp bàn làm việc, ghế công thái học và tủ đựng tài liệu cho văn phòng tầng 5. Bảo hành thiết bị 12 tháng kể từ ngày ký biên bản nghiệm thu.",
-        syncDate: "2026-07-01 10:00:00"
-    },
-    {
-        contractId: "HD-2025-001",
-        title: "Hợp đồng Dịch vụ Bảo trì Hệ thống PCCC",
-        partner: "Công ty Cổ phần Cơ điện và PCCC Hà Nội",
-        value: 48000000,
-        signDate: "2025-02-10",
-        expiryDate: "2026-02-10",
-        year: "2025",
-        fileUrl: "https://drive.google.com/file/d/mock_id_2025_01/view",
-        summary: "Bảo dưỡng, kiểm tra định kỳ hàng quý cho toàn bộ thiết bị phòng cháy chữa cháy tại tòa nhà văn phòng công ty. Cam kết trực ứng cứu sự cố 24/7.",
-        syncDate: "2026-07-01 10:00:00"
-    },
-    {
-        contractId: "HD-2025-002",
-        title: "Hợp đồng Thiết kế và Phát triển Website Thương mại",
-        partner: "Công ty Cổ phần Công nghệ AppVina",
-        value: 320000000,
-        signDate: "2025-04-05",
-        expiryDate: "2026-04-05",
-        year: "2025",
-        fileUrl: "https://drive.google.com/file/d/mock_id_2025_02/view",
-        summary: "Phát triển nền tảng website bán hàng tích hợp hệ thống thanh toán tự động và đồng bộ kho hàng. Bàn giao source code và hướng dẫn vận hành sau khi hoàn tất nghiệm thu.",
-        syncDate: "2026-07-01 10:00:00"
-    },
-    {
-        contractId: "HD-2026-001",
-        title: "Hợp đồng Đại lý Phân phối Bản quyền Phần mềm",
-        partner: "Tập đoàn Công nghệ Microsoft Việt Nam",
-        value: 1250000000,
-        signDate: "2026-01-02",
-        expiryDate: "2027-01-02",
-        year: "2026",
-        fileUrl: "https://drive.google.com/file/d/mock_id_2026_01/view",
-        summary: "Mua bản quyền Office 365 Enterprise và Windows Server cho toàn bộ nhân sự công ty sử dụng trong năm 2026. Hỗ trợ kỹ thuật trực tiếp từ đội ngũ kỹ sư Microsoft.",
-        syncDate: "2026-07-01 10:00:00"
-    },
-    {
-        contractId: "HD-2026-002",
-        title: "Hợp đồng Thuê Văn phòng Đại diện tại Đà Nẵng",
-        partner: "Công ty Cổ phần Đầu tư Bất động sản miền Trung",
-        value: 240000000,
-        signDate: "2026-03-01",
-        expiryDate: "2026-07-15", // Expiring soon relative to current date (2026-07-01)
-        year: "2026",
-        fileUrl: "https://drive.google.com/file/d/mock_id_2026_02/view",
-        summary: "Thuê mặt bằng văn phòng làm việc diện tích 120m2 tại Tòa nhà trung tâm hành chính. Đã đặt cọc 3 tháng tiền thuê. Thanh toán định kỳ mỗi quý một lần.",
-        syncDate: "2026-07-01 10:00:00"
-    }
-];
+const MOCK_CONTRACTS = [];
+
 
 // APPLICATION STATE
 let state = {
@@ -263,14 +189,17 @@ function initContracts() {
     if (savedContracts) {
         try {
             const parsed = JSON.parse(savedContracts);
-            state.contracts = parsed.map(c => ({
-                ...c,
-                contractId: c.contractId ? String(c.contractId) : "",
-                title: c.title ? String(c.title) : "",
-                partner: c.partner ? String(c.partner) : "",
-                summary: c.summary ? String(c.summary) : "",
-                year: c.year ? String(c.year) : ""
-            }));
+            const mockIds = ["HD-2024-001", "HD-2024-002", "HD-2025-001", "HD-2025-002", "HD-2026-001", "HD-2026-002"];
+            state.contracts = parsed
+                .filter(c => !mockIds.includes(c.contractId))
+                .map(c => ({
+                    ...c,
+                    contractId: c.contractId ? String(c.contractId) : "",
+                    title: c.title ? String(c.title) : "",
+                    partner: c.partner ? String(c.partner) : "",
+                    summary: c.summary ? String(c.summary) : "",
+                    year: c.year ? String(c.year) : ""
+                }));
             saveContractsToLocal();
         } catch (e) {
             console.error("Lỗi khi load contracts:", e);
