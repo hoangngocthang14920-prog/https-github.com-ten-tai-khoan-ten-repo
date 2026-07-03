@@ -1683,6 +1683,7 @@ async function callMockAIService() {
         title: "Hợp đồng Cung cấp Thiết bị Điện tử Văn phòng",
         partner: "Công ty Cổ phần Công nghệ Hoàng Hà",
         material: "Thiết bị điện tử văn phòng (máy chiếu, màn hình, loa)",
+        containedDocs: "Hợp đồng kinh tế, Biên bản bàn giao thiết bị, Hóa đơn tài chính",
         value: 175000000,
         signDate: "2025-06-15",
         expiryDate: "2026-06-15",
@@ -1694,6 +1695,7 @@ async function callMockAIService() {
         mockResult.title = "Hợp đồng Thuê Nhà làm Văn phòng Chi nhánh";
         mockResult.partner = "Công ty TNHH Bất động sản Vinhomes";
         mockResult.material = "Dịch vụ thuê văn phòng";
+        mockResult.containedDocs = "Hợp đồng thuê nhà, Biên bản bàn giao mặt bằng, Giấy tờ sở hữu";
         mockResult.value = 540000000;
         mockResult.signDate = "2026-05-01";
         mockResult.expiryDate = "2029-05-01";
@@ -1703,6 +1705,7 @@ async function callMockAIService() {
         mockResult.title = "Hợp đồng Thuê bản quyền phần mềm ERP";
         mockResult.partner = "Công ty Cổ phần MISA";
         mockResult.material = "Bản quyền phần mềm ERP MISA AMIS";
+        mockResult.containedDocs = "Hợp đồng dịch vụ, Hóa đơn tài chính, Giấy chứng nhận bản quyền";
         mockResult.value = 110000000;
         mockResult.signDate = "2024-11-20";
         mockResult.expiryDate = "2025-11-20";
