@@ -1605,7 +1605,7 @@ async function callGeminiAPI() {
             {
                 parts: [
                     {
-                        text: "Hãy phân tích hình ảnh/tệp hợp đồng đính kèm này và trích xuất các thông tin sau dưới dạng JSON chuẩn. Trả về DUY NHẤT một chuỗi JSON hợp lệ, không thêm bớt markdown hay ký tự codeblock khác. Schema:\n{\n  \"contractId\": \"Mã số hợp đồng (nếu không có, hãy tạo mã theo định dạng HD-YYYY-XXX dựa trên đối tác và năm)\",\n  \"title\": \"Tên tiêu đề hợp đồng\",\n  \"partner\": \"Tên công ty/đối tác ký kết hợp đồng với chúng tôi. Lưu ý quan trọng: Chúng tôi là 'Công ty Cổ phần sản xuất và Thương mại 68', vì vậy mục này phải ghi tên của đối tác ký kết cùng với 'Công ty Cổ phần sản xuất và Thương mại 68' (tuyệt đối không được ghi 'Công ty Cổ phần sản xuất và Thương mại 68' làm đối tác ký kết)\",\n  \"material\": \"Tên hàng hóa hoặc vật tư chính được đề cập (ví dụ: săm lốp cao su, thép cuộn, v.v., nếu không có hoặc không đề cập rõ thì để rỗng)\",\n  \"value\": \"Giá trị bằng số hợp đồng (ví dụ 100000000, nếu không có để 0)\",\n  \"signDate\": \"Ngày ký kết (YYYY-MM-DD)\",\n  \"expiryDate\": \"Ngày hết hạn (YYYY-MM-DD)\",\n  \"year\": \"Năm của hợp đồng (phải là 2024, 2025 hoặc 2026 dựa trên ngày ký hoặc nội dung hợp đồng)\",\n  \"summary\": \"Tóm tắt ngắn gọn các điều khoản chính và nghĩa vụ (khoảng 3 dòng)\"\n}"
+                        text: "Hãy phân tích hình ảnh/tệp hợp đồng đính kèm này và trích xuất các thông tin sau dưới dạng JSON chuẩn. Trả về DUY NHẤT một chuỗi JSON hợp lệ, không thêm bớt markdown hay ký tự codeblock khác. Schema:\n{\n  \"contractId\": \"Mã số hợp đồng (nếu không có, hãy tạo mã theo định dạng HD-YYYY-XXX dựa trên đối tác và năm)\",\n  \"title\": \"Tên tiêu đề hợp đồng\",\n  \"partner\": \"Tên công ty/đối tác ký kết hợp đồng với chúng tôi. Lưu ý quan trọng: Chúng tôi là 'Công ty Cổ phần sản xuất và Thương mại 68', vì vậy mục này phải ghi tên của đối tác ký kết cùng với 'Công ty Cổ phần sản xuất và Thương mại 68' (tuyệt đối không được ghi 'Công ty Cổ phần sản xuất và Thương mại 68' làm đối tác ký kết). Chỉ ghi duy nhất tên sạch của đối tác ký kết, tuyệt đối không thêm ghi chú, chú thích hay hậu tố dạng ngoặc đơn như '(ký kết với...)', '(ký kết cùng...)' vào sau tên đối tác.\",\n  \"material\": \"Tên hàng hóa hoặc vật tư chính được đề cập (ví dụ: săm lốp cao su, thép cuộn, v.v., nếu không có hoặc không đề cập rõ thì để rỗng)\",\n  \"value\": \"Giá trị bằng số hợp đồng (ví dụ 100000000, nếu không có để 0)\",\n  \"signDate\": \"Ngày ký kết (YYYY-MM-DD)\",\n  \"expiryDate\": \"Ngày hết hạn (YYYY-MM-DD)\",\n  \"year\": \"Năm của hợp đồng (phải là 2024, 2025 hoặc 2026 dựa trên ngày ký hoặc nội dung hợp đồng)\",\n  \"summary\": \"Tóm tắt ngắn gọn các điều khoản chính và nghĩa vụ (khoảng 3 dòng)\"\n}"
                     },
                     {
                         inlineData: {
@@ -1643,6 +1643,14 @@ async function callGeminiAPI() {
     try {
         const textResponse = resData.candidates[0].content.parts[0].text;
         const parsedJson = JSON.parse(textResponse.trim());
+        
+        // Clean partner name of any unwanted suffix parentheses mentioning our company
+        if (parsedJson.partner) {
+            parsedJson.partner = parsedJson.partner
+                .replace(/\s*\([^)]*(Công\s+ty\s+Cổ\s+phần\s+sản\s+xuất\s+và\s+Thương\s+mại\s+68|Công\s+ty\s+68|Thương\s+mại\s+68|68)[^)]*\)/gi, "")
+                .trim();
+        }
+        
         setConsoleStep(3, 'success');
         return parsedJson;
     } catch (parseError) {
@@ -2393,10 +2401,14 @@ async function syncContractsWithGoogleSheets() {
                     const extContractId = ext.contractId ? String(ext.contractId) : "";
                     const localIdx = state.contracts.findIndex(c => String(c.contractId || '') === extContractId);
                     // Standardize formats
+                    const cleanPartner = ext.partner ? String(ext.partner)
+                        .replace(/\s*\([^)]*(Công\s+ty\s+Cổ\s+phần\s+sản\s+xuất\s+và\s+Thương\s+mại\s+68|Công\s+ty\s+68|Thương\s+mại\s+68|68)[^)]*\)/gi, "")
+                        .trim() : "";
+
                     const contractObj = {
                         contractId: extContractId,
                         title: ext.title ? String(ext.title) : "",
-                        partner: ext.partner ? String(ext.partner) : "",
+                        partner: cleanPartner,
                         material: ext.material ? String(ext.material) : "",
                         value: Number(ext.value) || 0,
                         signDate: ext.signDate ? parseGASDate(ext.signDate) : "",
