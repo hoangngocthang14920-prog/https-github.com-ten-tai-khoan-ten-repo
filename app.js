@@ -198,6 +198,9 @@ function initContracts() {
                     title: c.title ? String(c.title) : "",
                     partner: c.partner ? String(c.partner) : "",
                     material: c.material ? String(c.material) : "",
+                    containedDocs: c.containedDocs ? String(c.containedDocs) : "",
+                    invoiceNumber: c.invoiceNumber ? String(c.invoiceNumber) : "",
+                    hsCode: c.hsCode ? String(c.hsCode) : "",
                     summary: c.summary ? String(c.summary) : "",
                     year: c.year ? String(c.year) : ""
                 }));
@@ -1605,7 +1608,7 @@ async function callGeminiAPI() {
             {
                 parts: [
                     {
-                        text: "Hãy phân tích hình ảnh/tệp hợp đồng đính kèm này và trích xuất các thông tin sau dưới dạng JSON chuẩn. Trả về DUY NHẤT một chuỗi JSON hợp lệ, không thêm bớt markdown hay ký tự codeblock khác. Schema:\n{\n  \"contractId\": \"Mã số hợp đồng (nếu không có, hãy tạo mã theo định dạng HD-YYYY-XXX dựa trên đối tác và năm)\",\n  \"title\": \"Tên tiêu đề hợp đồng\",\n  \"partner\": \"Tên công ty/đối tác ký kết hợp đồng với chúng tôi. Lưu ý quan trọng: Chúng tôi là 'Công ty Cổ phần sản xuất và Thương mại 68', vì vậy mục này phải ghi tên của đối tác ký kết cùng với 'Công ty Cổ phần sản xuất và Thương mại 68' (tuyệt đối không được ghi 'Công ty Cổ phần sản xuất và Thương mại 68' làm đối tác ký kết). Chỉ ghi duy nhất tên sạch của đối tác ký kết, tuyệt đối không thêm ghi chú, chú thích hay hậu tố dạng ngoặc đơn như '(ký kết với...)', '(ký kết cùng...)' vào sau tên đối tác.\",\n  \"material\": \"Tên hàng hóa hoặc vật tư chính được đề cập (ví dụ: săm lốp cao su, thép cuộn, v.v., nếu không có hoặc không đề cập rõ thì để rỗng)\",\n  \"value\": \"Giá trị bằng số hợp đồng (ví dụ 100000000, nếu không có để 0)\",\n  \"signDate\": \"Ngày ký kết (YYYY-MM-DD)\",\n  \"expiryDate\": \"Ngày hết hạn (YYYY-MM-DD)\",\n  \"year\": \"Năm của hợp đồng (phải là 2024, 2025 hoặc 2026 dựa trên ngày ký hoặc nội dung hợp đồng)\",\n  \"summary\": \"Tóm tắt ngắn gọn các điều khoản chính và nghĩa vụ (khoảng 3 dòng)\"\n}"
+                        text: "Hãy phân tích hình ảnh/tệp hợp đồng đính kèm này và trích xuất các thông tin sau dưới dạng JSON chuẩn. Trả về DUY NHẤT một chuỗi JSON hợp lệ, không thêm bớt markdown hay ký tự codeblock khác. Schema:\n{\n  \"contractId\": \"Mã số hợp đồng (nếu không có, hãy tạo mã theo định dạng HD-YYYY-XXX dựa trên đối tác và năm)\",\n  \"title\": \"Tên tiêu đề hợp đồng\",\n  \"partner\": \"Tên công ty/đối tác ký kết hợp đồng với chúng tôi. Lưu ý quan trọng: Chúng tôi là 'Công ty Cổ phần sản xuất và Thương mại 68', vì vậy mục này phải ghi tên của đối tác ký kết cùng với 'Công ty Cổ phần sản xuất và Thương mại 68' (tuyệt đối không được ghi 'Công ty Cổ phần sản xuất và Thương mại 68' làm đối tác ký kết). Chỉ ghi duy nhất tên sạch của đối tác ký kết, tuyệt đối không thêm ghi chú, chú thích hay hậu tố dạng ngoặc đơn như '(ký kết với...)', '(ký kết cùng...)' vào sau tên đối tác.\",\n  \"material\": \"Tên hàng hóa hoặc vật tư chính được đề cập (ví dụ: săm lốp cao su, thép cuộn, v.v., nếu không có hoặc không đề cập rõ thì để rỗng)\",\n  \"containedDocs\": \"Danh sách tiêu đề các tài liệu, văn bản có trong file này (ví dụ: Hợp đồng kinh tế, Biên bản nghiệm thu, Biên bản bàn giao, Hóa đơn, Bảo lãnh dự thầu... phân tách bằng dấu phẩy. Nếu chỉ có một hợp đồng đơn lẻ, hãy ghi tên tiêu đề của hợp đồng đó)\",\n  \"invoiceNumber\": \"Số hóa đơn VAT hoặc hóa đơn thương mại đi kèm xuất hiện trong tài liệu (nếu không có để rỗng)\",\n  \"value\": \"Giá trị bằng số hợp đồng (ví dụ 100000000, nếu không có để 0)\",\n  \"signDate\": \"Ngày ký kết (YYYY-MM-DD)\",\n  \"expiryDate\": \"Ngày hết hạn (YYYY-MM-DD)\",\n  \"year\": \"Năm của hợp đồng (phải là 2024, 2025 hoặc 2026 dựa trên ngày ký hoặc nội dung hợp đồng)\",\n  \"summary\": \"Tóm tắt ngắn gọn các điều khoản chính và nghĩa vụ (khoảng 3 dòng)\"\n}"
                     },
                     {
                         inlineData: {
@@ -1723,6 +1726,9 @@ function fillExtractedForm(data) {
     document.getElementById("ext-title").value = data.title || "";
     document.getElementById("ext-partner").value = data.partner || "";
     document.getElementById("ext-material").value = data.material || "";
+    document.getElementById("ext-contained-docs").value = data.containedDocs || "";
+    document.getElementById("ext-invoice-number").value = data.invoiceNumber || "";
+    document.getElementById("ext-hs-code").value = data.hsCode || "";
     document.getElementById("ext-value").value = data.value || 0;
     document.getElementById("ext-sign-date").value = data.signDate || "";
     document.getElementById("ext-expiry-date").value = data.expiryDate || "";
@@ -1745,6 +1751,9 @@ async function saveExtractedContract() {
     const title = document.getElementById("ext-title").value;
     const partner = document.getElementById("ext-partner").value;
     const material = document.getElementById("ext-material").value;
+    const containedDocs = document.getElementById("ext-contained-docs").value;
+    const invoiceNumber = document.getElementById("ext-invoice-number").value;
+    const hsCode = document.getElementById("ext-hs-code").value;
     const value = Number(document.getElementById("ext-value").value) || 0;
     const signDate = document.getElementById("ext-sign-date").value;
     const expiryDate = document.getElementById("ext-expiry-date").value;
@@ -1764,6 +1773,9 @@ async function saveExtractedContract() {
         title,
         partner,
         material,
+        containedDocs,
+        invoiceNumber,
+        hsCode,
         value,
         signDate,
         expiryDate,
@@ -1785,6 +1797,9 @@ async function saveExtractedContract() {
                 title,
                 partner,
                 material,
+                containedDocs,
+                invoiceNumber,
+                hsCode,
                 value,
                 signDate,
                 expiryDate,
@@ -1858,6 +1873,9 @@ async function saveFileItemContract(fileItem) {
         title: data.title ? String(data.title) : '',
         partner: data.partner ? String(data.partner) : '',
         material: data.material ? String(data.material) : '',
+        containedDocs: data.containedDocs ? String(data.containedDocs) : '',
+        invoiceNumber: data.invoiceNumber ? String(data.invoiceNumber) : '',
+        hsCode: data.hsCode ? String(data.hsCode) : '',
         value: Number(data.value) || 0,
         signDate: data.signDate || '',
         expiryDate: data.expiryDate || '',
@@ -1876,6 +1894,9 @@ async function saveFileItemContract(fileItem) {
                 title: newContract.title,
                 partner: newContract.partner,
                 material: newContract.material,
+                containedDocs: newContract.containedDocs,
+                invoiceNumber: newContract.invoiceNumber,
+                hsCode: newContract.hsCode,
                 value: newContract.value,
                 signDate: newContract.signDate,
                 expiryDate: newContract.expiryDate,
@@ -2410,6 +2431,9 @@ async function syncContractsWithGoogleSheets() {
                         title: ext.title ? String(ext.title) : "",
                         partner: cleanPartner,
                         material: ext.material ? String(ext.material) : "",
+                        containedDocs: ext.containedDocs ? String(ext.containedDocs) : "",
+                        invoiceNumber: ext.invoiceNumber ? String(ext.invoiceNumber) : "",
+                        hsCode: ext.hsCode ? String(ext.hsCode) : "",
                         value: Number(ext.value) || 0,
                         signDate: ext.signDate ? parseGASDate(ext.signDate) : "",
                         expiryDate: ext.expiryDate ? parseGASDate(ext.expiryDate) : "",
@@ -2467,7 +2491,7 @@ function exportContractsToCSV() {
     
     // CSV Header row
     let csvContent = "\uFEFF"; // UTF-8 BOM representation for Excel compliance
-    csvContent += "Mã Hợp Đồng,Tên Hợp Đồng,Đối Tác,Tên hàng hóa/ Vật tư,Giá Trị (VND),Ngày Ký,Ngày Hết Hạn,Năm Phân Loại,Đường dẫn Drive,Ngày Đồng Bộ\r\n";
+    csvContent += "Mã Hợp Đồng,Tên Hợp Đồng,Đối Tác,Tên hàng hóa/ Vật tư,Tài liệu có trong FILE,Số Hóa Đơn,Mã HS Code,Giá Trị (VND),Ngày Ký,Ngày Hết Hạn,Năm Phân Loại,Đường dẫn Drive,Ngày Đồng Bộ\r\n";
     
     state.contracts.forEach(c => {
         // Escaping comma and quotes
@@ -2476,6 +2500,9 @@ function exportContractsToCSV() {
             `"${c.title.replace(/"/g, '""')}"`,
             `"${c.partner.replace(/"/g, '""')}"`,
             `"${(c.material || '').replace(/"/g, '""')}"`,
+            `"${(c.containedDocs || '').replace(/"/g, '""')}"`,
+            `"${(c.invoiceNumber || '').replace(/"/g, '""')}"`,
+            `"${(c.hsCode || '').replace(/"/g, '""')}"`,
             c.value,
             c.signDate,
             c.expiryDate,
@@ -2631,6 +2658,9 @@ function openContractDetail(contractId) {
     document.getElementById("detail-title").textContent = contract.title;
     document.getElementById("detail-partner").textContent = contract.partner;
     document.getElementById("detail-material").textContent = contract.material || "-";
+    document.getElementById("detail-contained-docs").textContent = contract.containedDocs || "-";
+    document.getElementById("detail-invoice-number").textContent = contract.invoiceNumber || "-";
+    document.getElementById("detail-hs-code").textContent = contract.hsCode || "-";
     document.getElementById("detail-value").textContent = formatCurrency(contract.value);
     document.getElementById("detail-sign-date").textContent = formatDateDisplay(contract.signDate);
     document.getElementById("detail-expiry-date").textContent = formatDateDisplay(contract.expiryDate);
@@ -2741,6 +2771,9 @@ function openEditManualForm(contract) {
     document.getElementById("man-title").value = contract.title;
     document.getElementById("man-partner").value = contract.partner;
     document.getElementById("man-material").value = contract.material || "";
+    document.getElementById("man-contained-docs").value = contract.containedDocs || "";
+    document.getElementById("man-invoice-number").value = contract.invoiceNumber || "";
+    document.getElementById("man-hs-code").value = contract.hsCode || "";
     document.getElementById("man-value").value = contract.value;
     document.getElementById("man-sign-date").value = contract.signDate || "";
     document.getElementById("man-expiry-date").value = contract.expiryDate || "";
@@ -2755,6 +2788,9 @@ function saveManualContract() {
     const title = document.getElementById("man-title").value;
     const partner = document.getElementById("man-partner").value;
     const material = document.getElementById("man-material").value;
+    const containedDocs = document.getElementById("man-contained-docs").value;
+    const invoiceNumber = document.getElementById("man-invoice-number").value;
+    const hsCode = document.getElementById("man-hs-code").value;
     const value = Number(document.getElementById("man-value").value) || 0;
     const signDate = document.getElementById("man-sign-date").value;
     const expiryDate = document.getElementById("man-expiry-date").value;
@@ -2785,6 +2821,9 @@ function saveManualContract() {
         title,
         partner,
         material,
+        containedDocs,
+        invoiceNumber,
+        hsCode,
         value,
         signDate,
         expiryDate,
@@ -2803,6 +2842,9 @@ function saveManualContract() {
             title,
             partner,
             material,
+            containedDocs,
+            invoiceNumber,
+            hsCode,
             value,
             signDate,
             expiryDate,
