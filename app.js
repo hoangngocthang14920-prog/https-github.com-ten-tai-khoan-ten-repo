@@ -285,11 +285,82 @@ function initAuthentication() {
                 emailInput.value = "";
                 passwordInput.value = "";
                 
-                if (container) container.classList.remove("active");
+           // Helper function for local fallback login
+    const loginLocally = (email, password, rememberMe, emailInput, passwordInput, toastMessage) => {
+        let users = JSON.parse(localStorage.getItem("contract_system_users") || "[]");
+        
+        // Seed default admin if missing
+        const hasAdmin = users.some(u => u.email.toLowerCase() === "admin@causu68.vn");
+        if (!hasAdmin) {
+            users.push({ name: "Hoàng Ngọc Thắng", email: "admin@causu68.vn", password: "admin", role: "admin", status: "active" });
+            localStorage.setItem("contract_system_users", JSON.stringify(users));
+        }
+        
+        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+        
+        if (user) {
+            localStorage.removeItem("contract_system_logged_in");
+            localStorage.removeItem("contract_system_current_user");
+            sessionStorage.removeItem("contract_system_logged_in");
+            sessionStorage.removeItem("contract_system_current_user");
+            
+            const cleanUser = {
+                email: user.email,
+                name: user.name,
+                role: user.role || "admin",
+                status: user.status || "active"
+            };
+            
+            const storage = rememberMe && rememberMe.checked ? localStorage : sessionStorage;
+            storage.setItem("contract_system_logged_in", "true");
+            storage.setItem("contract_system_current_user", JSON.stringify(cleanUser));
+            
+            showToast(toastMessage || "Đăng nhập cục bộ thành công!", "success");
+            emailInput.value = "";
+            passwordInput.value = "";
+            
+            // Show app, hide auth
+            if (authWrapper) authWrapper.style.display = "none";
+            if (appContainer) appContainer.style.display = "flex";
+            
+            // Update profile
+            const profileBox = document.getElementById("user-profile-box");
+            const displayName = document.getElementById("user-display-name");
+            const displayEmail = document.getElementById("user-display-email");
+            const avatarInitials = document.getElementById("user-avatar-initials");
+            
+            if (profileBox && displayName && displayEmail) {
+                profileBox.style.display = "block";
+                displayName.textContent = cleanUser.name || "Người dùng";
+                displayEmail.textContent = cleanUser.email || "";
+                
+                if (avatarInitials && cleanUser.name) {
+                    avatarInitials.textContent = cleanUser.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+                }
             }
-        });
-    }
-    
+            
+            // Show user management menu if admin
+            const userMgmtMenu = document.getElementById("menu-item-users");
+            if (userMgmtMenu) {
+                if (cleanUser.role === "admin") {
+                    userMgmtMenu.style.display = "block";
+                } else {
+                    userMgmtMenu.style.display = "none";
+                }
+            }
+            
+            stopHeartbeat();
+        } else {
+            const errorDiv = document.getElementById('auth-signin-error');
+            if (errorDiv) errorDiv.textContent = "Email hoặc mật khẩu không đúng!";
+            const signInPanel = document.querySelector(".auth-sign-in form");
+            if (signInPanel) {
+                signInPanel.classList.add("shake-animation");
+                setTimeout(() => signInPanel.classList.remove("shake-animation"), 400);
+            }
+        }
+    };
+
     // Handle login
     if (signInForm) {
         signInForm.addEventListener('submit', async (e) => {
@@ -351,52 +422,29 @@ function initAuthentication() {
                         passwordInput.value = "";
                         checkLoginStatus();
                     } else {
-                        if (errorDiv) errorDiv.textContent = resJson.message;
-                        triggerShake();
+                        // Fallback for default admin if sheet login fails
+                        if (email.toLowerCase() === "admin@causu68.vn" && password === "admin") {
+                            loginLocally(email, password, rememberMe, emailInput, passwordInput, "Tài khoản admin chưa đồng bộ trên Sheet. Đăng nhập cục bộ.");
+                        } else {
+                            if (errorDiv) errorDiv.textContent = resJson.message;
+                            triggerShake();
+                        }
                     }
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
                 } catch (err) {
-                    if (errorDiv) errorDiv.textContent = "Lỗi kết nối máy chủ: " + err.message;
-                    triggerShake();
+                    console.warn("GAS connection failed, attempting local fallback:", err);
+                    if (email.toLowerCase() === "admin@causu68.vn" && password === "admin") {
+                        loginLocally(email, password, rememberMe, emailInput, passwordInput, "Lỗi kết nối Sheet. Đã chuyển sang đăng nhập cục bộ.");
+                    } else {
+                        if (errorDiv) errorDiv.textContent = "Lỗi kết nối máy chủ: " + err.message;
+                        triggerShake();
+                    }
                     submitBtn.disabled = false;
                     submitBtn.textContent = "Đăng nhập";
                 }
             } else {
-                let users = JSON.parse(localStorage.getItem("contract_system_users") || "[]");
-                
-                if (users.length === 0) {
-                    users.push({ name: "Hoàng Ngọc Thắng", email: "admin@causu68.vn", password: "admin", role: "admin", status: "active" });
-                    localStorage.setItem("contract_system_users", JSON.stringify(users));
-                }
-                
-                const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-                
-                if (user) {
-                    localStorage.removeItem("contract_system_logged_in");
-                    localStorage.removeItem("contract_system_current_user");
-                    sessionStorage.removeItem("contract_system_logged_in");
-                    sessionStorage.removeItem("contract_system_current_user");
-                    
-                    const cleanUser = {
-                        email: user.email,
-                        name: user.name,
-                        role: user.role || "admin",
-                        status: user.status || "active"
-                    };
-                    
-                    const storage = rememberMe && rememberMe.checked ? localStorage : sessionStorage;
-                    storage.setItem("contract_system_logged_in", "true");
-                    storage.setItem("contract_system_current_user", JSON.stringify(cleanUser));
-                    
-                    showToast("Đăng nhập cục bộ thành công!", "success");
-                    emailInput.value = "";
-                    passwordInput.value = "";
-                    checkLoginStatus();
-                } else {
-                    if (errorDiv) errorDiv.textContent = "Email hoặc mật khẩu không đúng!";
-                    triggerShake();
-                }
+                loginLocally(email, password, rememberMe, emailInput, passwordInput);
             }
         });
     }
