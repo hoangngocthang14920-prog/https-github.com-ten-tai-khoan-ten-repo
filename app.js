@@ -284,8 +284,11 @@ function initAuthentication() {
                 nameInput.value = "";
                 emailInput.value = "";
                 passwordInput.value = "";
-                
-           // Helper function for local fallback login
+            }
+        });
+    }
+    
+    // Helper function for local fallback login
     const loginLocally = (email, password, rememberMe, emailInput, passwordInput, toastMessage) => {
         let users = JSON.parse(localStorage.getItem("contract_system_users") || "[]");
         
