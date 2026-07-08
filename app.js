@@ -58,10 +58,386 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Initial Render
     renderCurrentTab();
+    
+    // Authentication Check
+    initAuthentication();
 });
 
 function initLucide() {
     lucide.createIcons();
+}
+
+// 0. AUTHENTICATION SYSTEM (LOGIN / SIGNUP GATEWAY)
+let heartbeatIntervalId = null;
+
+function startHeartbeat(sessionId) {
+    if (heartbeatIntervalId) clearInterval(heartbeatIntervalId);
+    if (!state.gasUrl || !sessionId) return;
+    
+    sendHeartbeat(sessionId);
+    heartbeatIntervalId = setInterval(() => {
+        sendHeartbeat(sessionId);
+    }, 30000);
+}
+
+function stopHeartbeat() {
+    if (heartbeatIntervalId) {
+        clearInterval(heartbeatIntervalId);
+        heartbeatIntervalId = null;
+    }
+}
+
+async function sendHeartbeat(sessionId) {
+    if (!state.gasUrl || !sessionId) return;
+    try {
+        const response = await fetch(state.gasUrl, {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify({
+                action: "heartbeat",
+                sessionId: sessionId
+            })
+        });
+        const result = await response.json();
+        if (result.status === "error") {
+            console.error("Heartbeat error:", result.message);
+            if (result.message.includes("hết hạn") || result.message.includes("không tồn tại")) {
+                forceLogout("Phiên làm việc của bạn đã hết hạn trên server.");
+            }
+        }
+    } catch (err) {
+        console.warn("Heartbeat network error:", err);
+    }
+}
+
+function forceLogout(message) {
+    stopHeartbeat();
+    localStorage.removeItem("contract_system_logged_in");
+    localStorage.removeItem("contract_system_current_user");
+    sessionStorage.removeItem("contract_system_logged_in");
+    sessionStorage.removeItem("contract_system_current_user");
+    state.isSettingsUnlocked = false;
+    
+    if (message) showToast(message, "warning");
+    
+    const authWrapper = document.getElementById("auth-screen-wrapper");
+    const appContainer = document.querySelector(".app-container");
+    if (authWrapper) authWrapper.style.display = "flex";
+    if (appContainer) appContainer.style.display = "none";
+}
+
+function initAuthentication() {
+    const authWrapper = document.getElementById("auth-screen-wrapper");
+    const appContainer = document.querySelector(".app-container");
+    
+    const registerBtn = document.getElementById('auth-register-toggle');
+    const loginBtn = document.getElementById('auth-login-toggle');
+    const container = document.getElementById('auth-container');
+    
+    const signInForm = document.getElementById('auth-signin-form');
+    const signUpForm = document.getElementById('auth-signup-form');
+    
+    const logoutBtn = document.getElementById('btn-logout');
+    
+    // Toggle login/signup panels
+    if (registerBtn && loginBtn && container) {
+        registerBtn.addEventListener('click', () => {
+            container.classList.add("active");
+        });
+        loginBtn.addEventListener('click', () => {
+            container.classList.remove("active");
+        });
+    }
+    
+    // Add mock clicks for social icons
+    const socialIcons = document.querySelectorAll(".auth-social-icons a");
+    socialIcons.forEach(icon => {
+        icon.addEventListener("click", (e) => {
+            e.preventDefault();
+            showToast("Đăng nhập bằng mạng xã hội đang được phát triển!", "info");
+        });
+    });
+    
+    // Check if logged in
+    const checkLoginStatus = () => {
+        const isLoggedIn = sessionStorage.getItem("contract_system_logged_in") === "true" || localStorage.getItem("contract_system_logged_in") === "true";
+        if (isLoggedIn) {
+            const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+            
+            // Show app, hide auth
+            if (authWrapper) authWrapper.style.display = "none";
+            if (appContainer) appContainer.style.display = "flex";
+            
+            // Update user profile in UI
+            const profileBox = document.getElementById("user-profile-box");
+            const displayName = document.getElementById("user-display-name");
+            const displayEmail = document.getElementById("user-display-email");
+            const avatarInitials = document.getElementById("user-avatar-initials");
+            
+            if (profileBox && displayName && displayEmail) {
+                profileBox.style.display = "block";
+                displayName.textContent = currentUser.name || "Người dùng";
+                displayEmail.textContent = currentUser.email || "";
+                
+                if (avatarInitials && currentUser.name) {
+                    avatarInitials.textContent = currentUser.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+                }
+            }
+            
+            // Show user management menu if admin
+            const userMgmtMenu = document.getElementById("menu-item-users");
+            if (userMgmtMenu) {
+                if (currentUser.role === "admin") {
+                    userMgmtMenu.style.display = "block";
+                } else {
+                    userMgmtMenu.style.display = "none";
+                    if (state.currentTab === "user-management") {
+                        switchTab("dashboard");
+                    }
+                }
+            }
+            
+            // Start heartbeat if sessionId is present
+            if (currentUser.sessionId) {
+                startHeartbeat(currentUser.sessionId);
+            } else {
+                stopHeartbeat();
+            }
+        } else {
+            // Hide app, show auth
+            if (authWrapper) authWrapper.style.display = "none";
+            if (appContainer) appContainer.style.display = "none";
+            if (authWrapper) authWrapper.style.display = "flex";
+            
+            stopHeartbeat();
+        }
+    };
+    
+    // Handle registration
+    if (signUpForm) {
+        signUpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('auth-signup-name');
+            const emailInput = document.getElementById('auth-signup-email');
+            const passwordInput = document.getElementById('auth-signup-password');
+            const errorDiv = document.getElementById('auth-signup-error');
+            const submitBtn = signUpForm.querySelector('button[type="submit"]');
+            
+            if (errorDiv) errorDiv.textContent = "";
+            
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            if (!name || !email || !password) {
+                if (errorDiv) errorDiv.textContent = "Vui lòng nhập đầy đủ thông tin!";
+                return;
+            }
+            
+            if (state.gasUrl) {
+                try {
+                    submitBtn.disabled = true;
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = "Đang xử lý...";
+                    
+                    const response = await fetch(state.gasUrl, {
+                        method: "POST",
+                        mode: "cors",
+                        body: JSON.stringify({
+                            action: "registerUser",
+                            email: email,
+                            name: name,
+                            password: password
+                        })
+                    });
+                    const resJson = await response.json();
+                    
+                    if (resJson.status === "success") {
+                        showToast(resJson.message, "success");
+                        nameInput.value = "";
+                        emailInput.value = "";
+                        passwordInput.value = "";
+                        if (container) container.classList.remove("active");
+                    } else {
+                        if (errorDiv) errorDiv.textContent = resJson.message;
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                } catch (err) {
+                    if (errorDiv) errorDiv.textContent = "Không thể kết nối đến máy chủ: " + err.message;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Đăng ký";
+                }
+            } else {
+                let users = JSON.parse(localStorage.getItem("contract_system_users") || "[]");
+                
+                if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                    if (errorDiv) errorDiv.textContent = "Email này đã được đăng ký!";
+                    return;
+                }
+                
+                users.push({ name, email, password, role: "admin", status: "active" });
+                localStorage.setItem("contract_system_users", JSON.stringify(users));
+                
+                showToast("Đăng ký tài khoản cục bộ thành công!", "success");
+                
+                nameInput.value = "";
+                emailInput.value = "";
+                passwordInput.value = "";
+                
+                if (container) container.classList.remove("active");
+            }
+        });
+    }
+    
+    // Handle login
+    if (signInForm) {
+        signInForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('auth-signin-email');
+            const passwordInput = document.getElementById('auth-signin-password');
+            const errorDiv = document.getElementById('auth-signin-error');
+            const rememberMe = document.getElementById('auth-remember-me');
+            const submitBtn = signInForm.querySelector('button[type="submit"]');
+            
+            if (errorDiv) errorDiv.textContent = "";
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                if (errorDiv) errorDiv.textContent = "Vui lòng điền email và mật khẩu!";
+                return;
+            }
+            
+            const signInPanel = document.querySelector(".auth-sign-in form");
+            const triggerShake = () => {
+                if (signInPanel) {
+                    signInPanel.classList.add("shake-animation");
+                    setTimeout(() => signInPanel.classList.remove("shake-animation"), 400);
+                }
+            };
+            
+            if (state.gasUrl) {
+                try {
+                    submitBtn.disabled = true;
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = "Đang xác thực...";
+                    
+                    const response = await fetch(state.gasUrl, {
+                        method: "POST",
+                        mode: "cors",
+                        body: JSON.stringify({
+                            action: "loginUser",
+                            email: email,
+                            password: password,
+                            userAgent: navigator.userAgent
+                        })
+                    });
+                    const resJson = await response.json();
+                    
+                    if (resJson.status === "success") {
+                        localStorage.removeItem("contract_system_logged_in");
+                        localStorage.removeItem("contract_system_current_user");
+                        sessionStorage.removeItem("contract_system_logged_in");
+                        sessionStorage.removeItem("contract_system_current_user");
+                        
+                        const storage = rememberMe && rememberMe.checked ? localStorage : sessionStorage;
+                        storage.setItem("contract_system_logged_in", "true");
+                        storage.setItem("contract_system_current_user", JSON.stringify(resJson.data));
+                        
+                        showToast("Đăng nhập thành công!", "success");
+                        emailInput.value = "";
+                        passwordInput.value = "";
+                        checkLoginStatus();
+                    } else {
+                        if (errorDiv) errorDiv.textContent = resJson.message;
+                        triggerShake();
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                } catch (err) {
+                    if (errorDiv) errorDiv.textContent = "Lỗi kết nối máy chủ: " + err.message;
+                    triggerShake();
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Đăng nhập";
+                }
+            } else {
+                let users = JSON.parse(localStorage.getItem("contract_system_users") || "[]");
+                
+                if (users.length === 0) {
+                    users.push({ name: "Hoàng Ngọc Thắng", email: "admin@causu68.vn", password: "admin", role: "admin", status: "active" });
+                    localStorage.setItem("contract_system_users", JSON.stringify(users));
+                }
+                
+                const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+                
+                if (user) {
+                    localStorage.removeItem("contract_system_logged_in");
+                    localStorage.removeItem("contract_system_current_user");
+                    sessionStorage.removeItem("contract_system_logged_in");
+                    sessionStorage.removeItem("contract_system_current_user");
+                    
+                    const cleanUser = {
+                        email: user.email,
+                        name: user.name,
+                        role: user.role || "admin",
+                        status: user.status || "active"
+                    };
+                    
+                    const storage = rememberMe && rememberMe.checked ? localStorage : sessionStorage;
+                    storage.setItem("contract_system_logged_in", "true");
+                    storage.setItem("contract_system_current_user", JSON.stringify(cleanUser));
+                    
+                    showToast("Đăng nhập cục bộ thành công!", "success");
+                    emailInput.value = "";
+                    passwordInput.value = "";
+                    checkLoginStatus();
+                } else {
+                    if (errorDiv) errorDiv.textContent = "Email hoặc mật khẩu không đúng!";
+                    triggerShake();
+                }
+            }
+        });
+    }
+    
+    // Handle logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+                
+                if (state.gasUrl && currentUser.sessionId) {
+                    try {
+                        await fetch(state.gasUrl, {
+                            method: "POST",
+                            mode: "cors",
+                            body: JSON.stringify({
+                                action: "logoutUser",
+                                sessionId: currentUser.sessionId
+                            })
+                        });
+                    } catch (err) {
+                        console.warn("Logout request failed:", err);
+                    }
+                }
+                
+                stopHeartbeat();
+                localStorage.removeItem("contract_system_logged_in");
+                localStorage.removeItem("contract_system_current_user");
+                sessionStorage.removeItem("contract_system_logged_in");
+                sessionStorage.removeItem("contract_system_current_user");
+                
+                state.isSettingsUnlocked = false;
+                showToast("Đã đăng xuất khỏi hệ thống!", "info");
+                checkLoginStatus();
+            }
+        });
+    }
+    
+    // Initial status check
+    checkLoginStatus();
 }
 
 // 1. SETTINGS & LOCAL STORAGE
@@ -131,6 +507,11 @@ function initSettingsLock() {
             showToast("Mở khóa cấu hình hệ thống thành công!", "success");
         } else {
             errorText.style.display = "block";
+            const lockCard = document.querySelector(".lock-card");
+            if (lockCard) {
+                lockCard.classList.add("shake");
+                setTimeout(() => lockCard.classList.remove("shake"), 400);
+            }
             passwordInput.focus();
             showToast("Mật khẩu không chính xác!", "error");
         }
@@ -717,6 +1098,7 @@ function initTabEvents() {
 }
 
 function switchTab(tabId) {
+    if (!tabId) return; // Ignore clicks on links without tab IDs like logout
     state.currentTab = tabId;
     
     // Update Sidebar Active state
@@ -758,6 +1140,10 @@ function switchTab(tabId) {
             titleEl.textContent = "Bảng dữ liệu đồng bộ";
             subtitleEl.textContent = "Danh sách chi tiết toàn bộ hồ sơ hợp đồng công ty trên Google Sheets";
             break;
+        case 'user-management':
+            titleEl.textContent = "Quản lý Thành viên & Phiên truy cập";
+            subtitleEl.textContent = "Duyệt tài khoản người dùng và xem danh sách phiên đăng nhập online";
+            break;
         case 'settings':
             titleEl.textContent = "Cấu hình hệ thống";
             subtitleEl.textContent = "Kết nối Gemini API và đồng bộ tài khoản Google Drive & Sheets";
@@ -786,6 +1172,9 @@ function renderCurrentTab() {
             break;
         case 'contracts-list':
             renderContractsTable();
+            break;
+        case 'user-management':
+            renderUserManagement();
             break;
         case 'settings':
             renderSettingsLockState();
@@ -1446,6 +1835,7 @@ async function triggerSingleAIScan() {
     startScanBtn.disabled = true;
     consoleCard.style.display = "block";
     scanningBar.style.display = "block";
+    document.querySelector(".preview-visual-box")?.classList.add("scanning");
     document.getElementById("scan-status-badge").textContent = "Đang xử lý...";
     document.getElementById("scan-status-badge").className = "badge badge-accent";
     
@@ -1469,6 +1859,7 @@ async function triggerSingleAIScan() {
         
         setTimeout(() => {
             scanningBar.style.display = "none";
+            document.querySelector(".preview-visual-box")?.classList.remove("scanning");
             fillExtractedForm(extractedData);
             document.getElementById("btn-save-extracted").disabled = false;
             document.getElementById("scan-status-badge").textContent = "Hoàn tất";
@@ -1484,6 +1875,7 @@ async function triggerSingleAIScan() {
         fileItem.errorMsg = error.message;
         
         scanningBar.style.display = "none";
+        document.querySelector(".preview-visual-box")?.classList.remove("scanning");
         document.getElementById("scan-status-badge").textContent = "Lỗi trích xuất";
         document.getElementById("scan-status-badge").className = "badge badge-accent";
         showToast("Lỗi xử lý AI: " + error.message, "error");
@@ -1514,6 +1906,7 @@ async function startBatchScanning() {
     const scanningBar = document.getElementById("scanning-bar");
     consoleCard.style.display = "block";
     scanningBar.style.display = "block";
+    document.querySelector(".preview-visual-box")?.classList.add("scanning");
     
     showToast(`Bắt đầu quét hàng loạt ${pendingFiles.length} tệp tin...`, "info");
     
@@ -1557,6 +1950,7 @@ async function startBatchScanning() {
     
     state.isProcessingBatch = false;
     scanningBar.style.display = "none";
+    document.querySelector(".preview-visual-box")?.classList.remove("scanning");
     
     document.getElementById("btn-start-batch-scan").disabled = false;
     document.getElementById("btn-clear-batch").disabled = false;
@@ -2952,6 +3346,315 @@ function formatBytes(bytes, decimals = 2) {
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+// ==========================================================================
+// USER MANAGEMENT RENDER & ACTIONS
+// ==========================================================================
+async function renderUserManagement() {
+    if (!state.gasUrl) {
+        showToast("Vui lòng cấu hình URL Google Apps Script Web App để sử dụng tính năng này!", "error");
+        switchTab('settings');
+        return;
+    }
+    
+    const tbodyUsers = document.getElementById("user-accounts-tbody");
+    const tbodySessions = document.getElementById("active-sessions-tbody");
+    
+    tbodyUsers.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Đang tải danh sách thành viên...</td></tr>`;
+    tbodySessions.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Đang tải danh sách phiên...</td></tr>`;
+    
+    const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+    
+    try {
+        // Load Users
+        const responseUsers = await fetch(state.gasUrl, {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify({
+                action: "getUsers",
+                adminEmail: currentUser.email
+            })
+        });
+        const resUsers = await responseUsers.json();
+        
+        if (resUsers.status === "success") {
+            const users = resUsers.data || [];
+            tbodyUsers.innerHTML = users.map(user => {
+                const isSelf = user.email.toLowerCase() === currentUser.email.toLowerCase();
+                const roleBadge = user.role === "admin" ? '<span class="badge badge-purple">Admin</span>' : '<span class="badge badge-blue">User</span>';
+                
+                let statusBadge = "";
+                if (user.status === "active") {
+                    statusBadge = '<span class="badge badge-emerald">Hoạt động</span>';
+                } else if (user.status === "pending") {
+                    statusBadge = '<span class="badge badge-accent">Chờ duyệt</span>';
+                } else {
+                    statusBadge = '<span class="badge badge-error">Bị khóa</span>';
+                }
+                
+                const initials = user.name ? user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "U";
+                
+                let actionsHTML = "";
+                if (isSelf) {
+                    actionsHTML = '<span class="text-muted" style="font-size:11.5px; font-style:italic;">Tài khoản của bạn</span>';
+                } else {
+                    if (user.status === "pending") {
+                        actionsHTML += `
+                            <button class="btn btn-emerald-soft btn-sm btn-icon-only" onclick="updateUserStatus('${user.email}', 'active')" title="Phê duyệt & kích hoạt">
+                                <i data-lucide="check"></i>
+                            </button>
+                        `;
+                    } else if (user.status === "active") {
+                        actionsHTML += `
+                            <button class="btn btn-danger-soft btn-sm btn-icon-only" onclick="updateUserStatus('${user.email}', 'blocked')" title="Tạm khóa tài khoản">
+                                <i data-lucide="lock"></i>
+                            </button>
+                        `;
+                    } else if (user.status === "blocked") {
+                        actionsHTML += `
+                            <button class="btn btn-emerald-soft btn-sm btn-icon-only" onclick="updateUserStatus('${user.email}', 'active')" title="Mở khóa tài khoản">
+                                <i data-lucide="unlock"></i>
+                            </button>
+                        `;
+                    }
+                    
+                    if (user.role === "user") {
+                        actionsHTML += `
+                            <button class="btn btn-secondary-soft btn-sm btn-icon-only" onclick="updateUserRole('${user.email}', 'admin')" title="Thăng lên Admin" style="margin-left: 4px;">
+                                <i data-lucide="shield"></i>
+                            </button>
+                        `;
+                    } else {
+                        actionsHTML += `
+                            <button class="btn btn-secondary-soft btn-sm btn-icon-only" onclick="updateUserRole('${user.email}', 'user')" title="Hạ cấp xuống User" style="margin-left: 4px;">
+                                <i data-lucide="shield-off"></i>
+                            </button>
+                        `;
+                    }
+                    
+                    actionsHTML += `
+                        <button class="btn btn-danger-soft btn-sm btn-icon-only" onclick="deleteUser('${user.email}')" title="Xóa vĩnh viễn" style="margin-left: 8px;">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    `;
+                }
+                
+                return `
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, #a855f7, #6366f1); display:flex; align-items:center; justify-content:center; font-weight:bold; color:white; font-size:11px;">
+                                    ${initials}
+                                </div>
+                                <span style="font-weight:600; font-size:13px;">${user.name}</span>
+                            </div>
+                        </td>
+                        <td style="font-size:12.5px;">${user.email}</td>
+                        <td>${roleBadge}</td>
+                        <td>${statusBadge}</td>
+                        <td style="font-size:12px; color:var(--text-muted);">${formatDateDisplay(user.createdAt ? user.createdAt.substring(0, 10) : "")}</td>
+                        <td>
+                            <div class="user-action-btn-group">
+                                ${actionsHTML}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            tbodyUsers.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-danger); padding: 20px;">Lỗi: ${resUsers.message}</td></tr>`;
+        }
+        
+        // Load Sessions
+        const responseSessions = await fetch(state.gasUrl, {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify({
+                action: "getActiveSessions",
+                adminEmail: currentUser.email
+            })
+        });
+        const resSessions = await responseSessions.json();
+        
+        if (resSessions.status === "success") {
+            const sessions = resSessions.data || [];
+            let onlineCount = 0;
+            
+            tbodySessions.innerHTML = sessions.map(session => {
+                const isOnline = session.status === "online";
+                if (isOnline) onlineCount++;
+                
+                const activeDot = isOnline ? '<span class="session-active-dot online"></span>' : '<span class="session-active-dot offline"></span>';
+                const statusLabel = isOnline ? '<span class="text-emerald" style="font-weight:600; font-size:12px;">Trực tuyến</span>' : '<span class="text-muted" style="font-size:12px;">Ngoại tuyến</span>';
+                
+                const deviceText = parseUserAgent(session.userAgent);
+                
+                let timeText = "";
+                if (isOnline) {
+                    timeText = "Vừa xong";
+                } else if (session.lastActive) {
+                    try {
+                        timeText = formatDateDisplay(session.lastActive.substring(0, 10)) + " " + session.lastActive.substring(11, 16);
+                    } catch(e) {
+                        timeText = session.lastActive;
+                    }
+                } else {
+                    timeText = formatDateDisplay(session.loginTime ? session.loginTime.substring(0, 10) : "");
+                }
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="session-device-info">
+                                <span style="font-weight:600; font-size:13px;">${session.name}</span>
+                                <span class="session-device-text">${session.email}</span>
+                            </div>
+                        </td>
+                        <td style="font-size:11.5px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${session.userAgent}">${deviceText}</td>
+                        <td style="font-size:12px; color:var(--text-muted);">${timeText}</td>
+                        <td>
+                            <div style="display:flex; align-items:center;">
+                                ${activeDot}
+                                ${statusLabel}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById("active-sessions-count").textContent = `${onlineCount} online`;
+            if (onlineCount > 0) {
+                document.getElementById("active-sessions-count").className = "badge badge-emerald";
+            } else {
+                document.getElementById("active-sessions-count").className = "badge badge-accent";
+            }
+        } else {
+            tbodySessions.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--color-danger); padding: 20px;">Lỗi: ${resSessions.message}</td></tr>`;
+        }
+        
+        initLucide();
+    } catch (err) {
+        console.error("Lỗi khi tải dữ liệu thành viên:", err);
+        tbodyUsers.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-danger); padding: 20px;">Không thể tải danh sách thành viên: ${err.message}</td></tr>`;
+        tbodySessions.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--color-danger); padding: 20px;">Không thể tải danh sách phiên.</td></tr>`;
+    }
+}
+
+function parseUserAgent(ua) {
+    if (!ua) return "Thiết bị không xác định";
+    let browser = "Trình duyệt khác";
+    let os = "OS khác";
+    
+    if (ua.includes("Chrome") && !ua.includes("Edg") && !ua.includes("OPR")) browser = "Chrome";
+    else if (ua.includes("Edg")) browser = "Edge";
+    else if (ua.includes("Firefox")) browser = "Firefox";
+    else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+    else if (ua.includes("OPR") || ua.includes("Opera")) browser = "Opera";
+    
+    if (ua.includes("Windows")) os = "Windows";
+    else if (ua.includes("Macintosh") || ua.includes("Mac OS")) os = "macOS";
+    else if (ua.includes("Android")) os = "Android";
+    else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+    else if (ua.includes("Linux")) os = "Linux";
+    
+    return `${browser} (${os})`;
+}
+
+// Window actions
+window.updateUserStatus = async function(email, status) {
+    if (!state.gasUrl) return;
+    const actionText = status === 'active' ? 'kích hoạt' : 'tạm khóa';
+    if (confirm(`Bạn có chắc chắn muốn ${actionText} tài khoản: ${email}?`)) {
+        try {
+            const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+            const response = await fetch(state.gasUrl, {
+                method: "POST",
+                mode: "cors",
+                body: JSON.stringify({
+                    action: "updateUserStatus",
+                    adminEmail: currentUser.email,
+                    targetEmail: email,
+                    status: status
+                })
+            });
+            const result = await response.json();
+            if (result.status === "success") {
+                showToast("Cập nhật trạng thái người dùng thành công!", "success");
+                renderUserManagement();
+            } else {
+                showToast("Lỗi: " + result.message, "error");
+            }
+        } catch(err) {
+            showToast("Lỗi đồng bộ: " + err.message, "error");
+        }
+    }
+};
+
+window.updateUserRole = async function(email, role) {
+    if (!state.gasUrl) return;
+    const roleText = role === 'admin' ? 'Quản trị viên (Admin)' : 'Thành viên (User)';
+    if (confirm(`Bạn có chắc chắn muốn đổi vai trò tài khoản: ${email} thành "${roleText}"?`)) {
+        try {
+            const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+            const response = await fetch(state.gasUrl, {
+                method: "POST",
+                mode: "cors",
+                body: JSON.stringify({
+                    action: "updateUserStatus",
+                    adminEmail: currentUser.email,
+                    targetEmail: email,
+                    role: role
+                })
+            });
+            const result = await response.json();
+            if (result.status === "success") {
+                showToast("Cập nhật vai trò thành công!", "success");
+                renderUserManagement();
+            } else {
+                showToast("Lỗi: " + result.message, "error");
+            }
+        } catch(err) {
+            showToast("Lỗi đồng bộ: " + err.message, "error");
+        }
+    }
+};
+
+window.deleteUser = async function(email) {
+    if (!state.gasUrl) return;
+    if (confirm(`CẢNH BÁO: Bạn có muốn xóa vĩnh viễn tài khoản: ${email}? Hành động này không thể hoàn tác!`)) {
+        try {
+            const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+            const response = await fetch(state.gasUrl, {
+                method: "POST",
+                mode: "cors",
+                body: JSON.stringify({
+                    action: "deleteUser",
+                    adminEmail: currentUser.email,
+                    targetEmail: email
+                })
+            });
+            const result = await response.json();
+            if (result.status === "success") {
+                showToast("Đã xóa tài khoản thành công!", "success");
+                renderUserManagement();
+            } else {
+                showToast("Lỗi: " + result.message, "error");
+            }
+        } catch(err) {
+            showToast("Lỗi đồng bộ: " + err.message, "error");
+        }
+    }
+};
+
+// Bind Refresh button inside User Management UI
+document.addEventListener("DOMContentLoaded", () => {
+    const refreshBtn = document.getElementById("btn-refresh-users");
+    if (refreshBtn) {
+        refreshBtn.addEventListener("click", () => {
+            renderUserManagement();
+        });
+    }
+});
 
 
 

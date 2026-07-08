@@ -10,12 +10,84 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Lucide Icons for premium modern look -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- FontAwesome for Social Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Chart.js for analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom CSS styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="dark-theme">
+    <!-- AUTHENTICATION SCREEN -->
+    <div class="auth-screen-wrapper" id="auth-screen-wrapper" style="display: none;">
+        <!-- Background Ambient Glows -->
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        
+        <div class="auth-container" id="auth-container">
+            <!-- SIGN UP FORM -->
+            <div class="auth-form-container auth-sign-up">
+                <form id="auth-signup-form">
+                    <h1>Tạo Tài Khoản</h1>
+                    <div class="auth-social-icons">
+                        <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
+                        <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+                    </div>
+                    <span>hoặc đăng ký bằng email của bạn</span>
+                    <input type="text" id="auth-signup-name" placeholder="Họ và tên" required>
+                    <input type="email" id="auth-signup-email" placeholder="Email" required>
+                    <input type="password" id="auth-signup-password" placeholder="Mật khẩu" required>
+                    <div class="auth-error-msg" id="auth-signup-error"></div>
+                    <button type="submit" id="btn-auth-signup">Đăng Ký</button>
+                </form>
+            </div>
+            
+            <!-- SIGN IN FORM -->
+            <div class="auth-form-container auth-sign-in">
+                <form id="auth-signin-form">
+                    <h1>Đăng Nhập</h1>
+                    <div class="auth-social-icons">
+                        <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
+                        <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+                    </div>
+                    <span>hoặc sử dụng tài khoản email của bạn</span>
+                    <input type="email" id="auth-signin-email" placeholder="Email" required>
+                    <input type="password" id="auth-signin-password" placeholder="Mật khẩu" required>
+                    
+                    <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; margin: 10px 0;">
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="auth-remember-me" style="width: auto; margin: 0;"> Ghi nhớ đăng nhập
+                        </label>
+                        <a href="#">Quên mật khẩu?</a>
+                    </div>
+                    
+                    <div class="auth-error-msg" id="auth-signin-error"></div>
+                    <button type="submit" id="btn-auth-signin">Đăng Nhập</button>
+                </form>
+            </div>
+            
+            <!-- TOGGLE SLIDE PANELS -->
+            <div class="auth-toggle-container">
+                <div class="auth-toggle">
+                    <div class="auth-toggle-panel auth-toggle-left">
+                        <h1>Chào Mừng Trở Lại!</h1>
+                        <p>Nhập thông tin đăng nhập cá nhân để tiếp tục quản lý dữ liệu hợp đồng</p>
+                        <button class="hidden" id="auth-login-toggle" type="button">Đăng Nhập</button>
+                    </div>
+                    <div class="auth-toggle-panel auth-toggle-right">
+                        <h1>Xin Chào Bạn!</h1>
+                        <p>Đăng ký tài khoản mới để bắt đầu trải nghiệm hệ thống lưu trữ hợp đồng</p>
+                        <button class="hidden" id="auth-register-toggle" type="button">Đăng Ký</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
         
         <!-- SIDEBAR -->
@@ -61,16 +133,39 @@
                             <span>Bảng Dữ liệu</span>
                         </a>
                     </li>
+                    <li data-tab="user-management" id="menu-item-users" style="display: none;">
+                        <a href="javascript:void(0)">
+                            <i data-lucide="users"></i>
+                            <span>Quản lý Thành viên</span>
+                        </a>
+                    </li>
                     <li data-tab="settings">
                         <a href="javascript:void(0)">
                             <i data-lucide="settings"></i>
                             <span>Cấu hình Hệ thống</span>
                         </a>
                     </li>
+                    <li id="menu-item-logout">
+                        <a href="javascript:void(0)" id="btn-logout">
+                            <i data-lucide="log-out" style="color: var(--color-danger);"></i>
+                            <span style="color: var(--color-danger);">Đăng xuất</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
             
             <div class="sidebar-footer">
+                <div class="user-profile-box" id="user-profile-box" style="display: none; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent), var(--color-purple)); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 13px;" id="user-avatar-initials">
+                            U
+                        </div>
+                        <div style="flex: 1; overflow: hidden;">
+                            <h4 style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0; text-overflow: ellipsis; white-space: nowrap;" id="user-display-name">Người dùng</h4>
+                            <span style="font-size: 10px; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap; display: block; margin-top: 1px;" id="user-display-email">user@example.com</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="connection-status">
                     <div class="status-item" id="google-status">
                         <span class="status-indicator offline"></span>
@@ -858,6 +953,82 @@
                                     <button class="btn btn-danger-soft" id="btn-reset-db">
                                         <i data-lucide="rotate-ccw"></i> Reset Local Storage
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </section>
+
+                <!-- TAB 6: USER MANAGEMENT -->
+                <section class="tab-content" id="tab-user-management">
+                    <div class="user-management-grid">
+                        
+                        <!-- USER ACCOUNTS LIST CARD -->
+                        <div class="card" style="grid-column: span 1;">
+                            <div class="card-header border-bottom">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i data-lucide="users" class="header-icon text-accent"></i>
+                                    <h3>Danh sách tài khoản đăng ký</h3>
+                                </div>
+                                <button class="btn btn-sm btn-secondary-soft" id="btn-refresh-users" style="gap: 6px;">
+                                    <i data-lucide="refresh-cw"></i>
+                                    <span>Tải lại</span>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table-minimal">
+                                        <thead>
+                                            <tr>
+                                                <th>Thành viên</th>
+                                                <th>Email</th>
+                                                <th>Vai trò</th>
+                                                <th>Trạng thái</th>
+                                                <th>Ngày đăng ký</th>
+                                                <th>Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="user-accounts-tbody">
+                                            <tr>
+                                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                                    Đang tải danh sách thành viên...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ACTIVE SESSIONS CARD -->
+                        <div class="card" style="grid-column: span 1;">
+                            <div class="card-header border-bottom">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i data-lucide="activity" class="header-icon text-emerald"></i>
+                                    <h3>Phiên hoạt động gần đây</h3>
+                                </div>
+                                <span class="badge badge-emerald" id="active-sessions-count" style="font-size: 11px;">0 online</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table-minimal">
+                                        <thead>
+                                            <tr>
+                                                <th>Thành viên</th>
+                                                <th>Thiết bị / Trình duyệt</th>
+                                                <th>Thời gian</th>
+                                                <th>Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="active-sessions-tbody">
+                                            <tr>
+                                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                                    Đang tải danh sách phiên...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
