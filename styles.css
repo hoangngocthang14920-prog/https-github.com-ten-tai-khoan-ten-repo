@@ -1065,6 +1065,8 @@ body.light-theme .table-minimal td {
     border-radius: var(--radius-sm);
     font-size: 11px;
     font-weight: 700;
+    white-space: nowrap;
+    display: inline-block;
 }
 
 .badge-2024 { background-color: var(--color-orange-glow); color: var(--color-orange); border: 1px solid rgba(249, 115, 22, 0.3); }
@@ -1562,6 +1564,8 @@ body.light-theme .folder-item:hover {
     border-radius: var(--radius-sm);
     font-size: 9px;
     font-weight: 700;
+    white-space: nowrap;
+    display: inline-block;
 }
 
 /* Folder Item Actions (3-dot menu) */
@@ -1881,6 +1885,8 @@ body.light-theme .document-card::after {
     font-weight: 700;
     padding: 2px 8px;
     border-radius: var(--radius-sm);
+    white-space: nowrap;
+    display: inline-block;
 }
 
 .doc-code {
