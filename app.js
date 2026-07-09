@@ -8,6 +8,7 @@ let state = {
     currentTab: 'dashboard',
     selectedYearFolder: 'all',
     selectedContract: null,
+    editingContractId: null,
     geminiKey: '',
     geminiModel: 'gemini-1.5-flash',
     geminiApiVersion: 'v1beta',
@@ -3206,6 +3207,8 @@ function openManualModal() {
     
     const modal = document.getElementById("manual-upload-modal");
     modal.querySelector("h3").textContent = "Thêm hồ sơ hợp đồng mới";
+    document.getElementById("man-contract-id").readOnly = false; // Make editable
+    state.editingContractId = null; // Clear edit ID
     modal.classList.add("active");
 }
 
@@ -3214,7 +3217,8 @@ function openEditManualForm(contract) {
     modal.querySelector("h3").textContent = `Chỉnh sửa hợp đồng: ${contract.contractId}`;
     
     document.getElementById("man-contract-id").value = contract.contractId;
-    document.getElementById("man-contract-id").readOnly = true; // Lock key on edit
+    document.getElementById("man-contract-id").readOnly = false; // Allow editing the contract ID
+    state.editingContractId = contract.contractId; // Save original ID for lookup/sync
     document.getElementById("man-year").value = contract.year;
     document.getElementById("man-title").value = contract.title;
     document.getElementById("man-partner").value = contract.partner;
@@ -3231,7 +3235,7 @@ function openEditManualForm(contract) {
 }
 
 function saveManualContract() {
-    const contractId = document.getElementById("man-contract-id").value;
+    const contractId = document.getElementById("man-contract-id").value.trim();
     const year = document.getElementById("man-year").value;
     const title = document.getElementById("man-title").value;
     const partner = document.getElementById("man-partner").value;
@@ -3244,7 +3248,25 @@ function saveManualContract() {
     const expiryDate = document.getElementById("man-expiry-date").value;
     const summary = document.getElementById("man-summary").value;
     
-    const existingIndex = state.contracts.findIndex(c => c.contractId === contractId);
+    if (!contractId) {
+        showToast("Vui lòng nhập Số / Mã Hợp Đồng!", "error");
+        return;
+    }
+    
+    // Check duplication of contractId if it is a new contract, or if the ID was changed
+    const isEdit = !!state.editingContractId;
+    const isIdChanged = isEdit && (state.editingContractId !== contractId);
+    
+    if (!isEdit || isIdChanged) {
+        const duplicateIndex = state.contracts.findIndex(c => c.contractId === contractId);
+        if (duplicateIndex > -1) {
+            showToast("Số / Mã Hợp Đồng đã tồn tại trong hệ thống. Vui lòng chọn mã khác!", "error");
+            return;
+        }
+    }
+    
+    const searchId = state.editingContractId || contractId;
+    const existingIndex = state.contracts.findIndex(c => c.contractId === searchId);
     
     let fileUrl = "Lưu trữ cục bộ - không tải lên Drive";
     let fileId = "";
@@ -3287,6 +3309,7 @@ function saveManualContract() {
         const payload = {
             action: "addContract",
             contractId,
+            oldContractId: state.editingContractId || contractId,
             title,
             partner,
             material,
@@ -3346,6 +3369,7 @@ function saveManualContract() {
     }
     
     saveContractsToLocal();
+    state.editingContractId = null; // Clear editing ID
     document.getElementById("manual-upload-modal").classList.remove("active");
     
     // reload views
