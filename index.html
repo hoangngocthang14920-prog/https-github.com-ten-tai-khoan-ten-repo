@@ -1238,53 +1238,109 @@
         <div class="modal-container modal-small">
             <div class="modal-header">
                 <div class="modal-header-title">
-                    <i data-lucide="user" class="header-icon text-accent"></i>
-                    <h3>Thông tin tài khoản</h3>
+                    <i data-lucide="user" class="header-icon text-accent" id="profile-modal-header-icon"></i>
+                    <h3 id="profile-modal-header-title">Thông tin tài khoản</h3>
                 </div>
                 <button class="modal-close" id="btn-close-profile-modal">
                     <i data-lucide="x"></i>
                 </button>
             </div>
             
-            <div class="modal-body" style="display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 30px 24px;">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent), var(--color-purple)); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 32px; box-shadow: 0 0 20px var(--color-accent-glow); border: 2px solid rgba(255,255,255,0.1);" id="profile-modal-avatar">
-                    U
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 20px; padding: 24px;">
+                <!-- VIEW PROFILE SECTION -->
+                <div id="profile-view-section" style="display: flex; flex-direction: column; gap: 20px; align-items: center; width: 100%;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent), var(--color-purple)); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 32px; box-shadow: 0 0 20px var(--color-accent-glow); border: 2px solid rgba(255,255,255,0.1);" id="profile-modal-avatar">
+                        U
+                    </div>
+                    
+                    <div style="width: 100%; display: flex; flex-direction: column; gap: 16px;">
+                        <div class="detail-field">
+                            <span class="field-label">Tên tài khoản</span>
+                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+                                <i data-lucide="user" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                <span class="field-value" id="profile-modal-name" style="font-weight: 600;">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-field">
+                            <span class="field-label">Gmail / Email</span>
+                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+                                <i data-lucide="mail" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                <span class="field-value" id="profile-modal-email">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-field">
+                            <span class="field-label">Mật khẩu</span>
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+                                <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                    <i data-lucide="key-round" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                    <input type="password" id="profile-modal-password" value="••••••••" readonly style="background: transparent; border: none; outline: none; padding: 0; color: var(--text-primary); font-size: 14px; width: 100%; font-family: monospace; letter-spacing: 2px;">
+                                </div>
+                                <button type="button" id="btn-toggle-profile-password" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: var(--transition);">
+                                    <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div style="width: 100%; display: flex; flex-direction: column; gap: 16px;">
+
+                <!-- CHANGE PASSWORD SECTION -->
+                <form id="profile-change-password-section" style="display: none; flex-direction: column; gap: 16px; width: 100%;">
                     <div class="detail-field">
-                        <span class="field-label">Tên tài khoản</span>
-                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
-                            <i data-lucide="user" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
-                            <span class="field-value" id="profile-modal-name" style="font-weight: 600;">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="detail-field">
-                        <span class="field-label">Gmail / Email</span>
-                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
-                            <i data-lucide="mail" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
-                            <span class="field-value" id="profile-modal-email">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="detail-field">
-                        <span class="field-label">Mật khẩu</span>
+                        <label for="change-pwd-current" class="field-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
                         <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
                             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-                                <i data-lucide="key-round" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
-                                <input type="password" id="profile-modal-password" value="••••••••" readonly style="background: transparent; border: none; outline: none; padding: 0; color: var(--text-primary); font-size: 14px; width: 100%; font-family: monospace; letter-spacing: 2px;">
+                                <i data-lucide="lock" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                <input type="password" id="change-pwd-current" required placeholder="Nhập mật khẩu hiện tại" style="background: transparent; border: none; outline: none; padding: 0; color: var(--text-primary); font-size: 14px; width: 100%;">
                             </div>
-                            <button type="button" id="btn-toggle-profile-password" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: var(--transition);">
+                            <button type="button" class="btn-toggle-pwd-visibility" data-target="change-pwd-current" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
                                 <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
                             </button>
                         </div>
                     </div>
-                </div>
+
+                    <div class="detail-field">
+                        <label for="change-pwd-new" class="field-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+                            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <i data-lucide="key-round" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                <input type="password" id="change-pwd-new" required placeholder="Tối thiểu 6 ký tự" style="background: transparent; border: none; outline: none; padding: 0; color: var(--text-primary); font-size: 14px; width: 100%;">
+                            </div>
+                            <button type="button" class="btn-toggle-pwd-visibility" data-target="change-pwd-new" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+                                <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label for="change-pwd-confirm" class="field-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+                            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <i data-lucide="check" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                <input type="password" id="change-pwd-confirm" required placeholder="Nhập lại mật khẩu mới" style="background: transparent; border: none; outline: none; padding: 0; color: var(--text-primary); font-size: 14px; width: 100%;">
+                            </div>
+                            <button type="button" class="btn-toggle-pwd-visibility" data-target="change-pwd-confirm" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+                                <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="change-pwd-error" style="color: var(--color-danger); font-size: 12px; margin-top: 4px; display: none;"></div>
+                </form>
             </div>
             
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="btn-close-profile-modal-footer">Đóng</button>
+            <div class="modal-footer" style="padding: 16px 24px;">
+                <div id="profile-view-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <button class="btn btn-accent-soft btn-sm" id="btn-show-change-password" style="gap: 6px;">
+                        <i data-lucide="key-round"></i> Đổi mật khẩu
+                    </button>
+                    <button class="btn btn-secondary" id="btn-close-profile-modal-footer">Đóng</button>
+                </div>
+                <div id="profile-change-password-footer" style="display: none; justify-content: flex-end; gap: 12px; width: 100%;">
+                    <button class="btn btn-secondary" id="btn-cancel-change-password" type="button">Hủy bỏ</button>
+                    <button class="btn btn-accent" id="btn-save-change-password" type="button">Lưu mật khẩu</button>
+                </div>
             </div>
         </div>
     </div>

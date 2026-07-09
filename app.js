@@ -3740,43 +3740,98 @@ function initProfileModal() {
     const closeBtn = document.getElementById("btn-close-profile-modal");
     const closeFooterBtn = document.getElementById("btn-close-profile-modal-footer");
     
+    // Header elements
+    const headerTitle = document.getElementById("profile-modal-header-title");
+    const headerIcon = document.getElementById("profile-modal-header-icon");
+    
+    // View profile section
+    const viewSection = document.getElementById("profile-view-section");
+    const viewFooter = document.getElementById("profile-view-footer");
     const nameSpan = document.getElementById("profile-modal-name");
     const emailSpan = document.getElementById("profile-modal-email");
     const passwordInput = document.getElementById("profile-modal-password");
     const avatarDiv = document.getElementById("profile-modal-avatar");
     const togglePasswordBtn = document.getElementById("btn-toggle-profile-password");
     
+    // Change password section
+    const changeSection = document.getElementById("profile-change-password-section");
+    const changeFooter = document.getElementById("profile-change-password-footer");
+    const currentPwdInput = document.getElementById("change-pwd-current");
+    const newPwdInput = document.getElementById("change-pwd-new");
+    const confirmPwdInput = document.getElementById("change-pwd-confirm");
+    const pwdErrorDiv = document.getElementById("change-pwd-error");
+    
+    // Action buttons
+    const btnShowChangePwd = document.getElementById("btn-show-change-password");
+    const btnCancelChangePwd = document.getElementById("btn-cancel-change-password");
+    const btnSaveChangePwd = document.getElementById("btn-save-change-password");
+    
     if (!profileBox || !profileModal) return;
     
     profileBox.style.cursor = "pointer";
     profileBox.title = "Xem thông tin tài khoản";
     
-    profileBox.addEventListener("click", () => {
-        const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
-        
-        nameSpan.textContent = currentUser.name || "Người dùng";
-        emailSpan.textContent = currentUser.email || "";
-        
-        if (currentUser.name) {
-            avatarDiv.textContent = currentUser.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
-        } else {
-            avatarDiv.textContent = "U";
+    // Reset to view profile mode
+    const resetToView = () => {
+        if (changeSection) changeSection.reset();
+        if (pwdErrorDiv) {
+            pwdErrorDiv.style.display = "none";
+            pwdErrorDiv.textContent = "";
         }
         
+        if (viewSection) viewSection.style.display = "flex";
+        if (viewFooter) viewFooter.style.display = "flex";
+        if (changeSection) changeSection.style.display = "none";
+        if (changeFooter) changeFooter.style.display = "none";
+        
+        if (headerTitle) headerTitle.textContent = "Thông tin tài khoản";
+        if (headerIcon) {
+            headerIcon.setAttribute("data-lucide", "user");
+        }
+        
+        // Refresh values in view mode
+        const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
         let userPassword = currentUser.password;
         if (!userPassword && currentUser.email && currentUser.email.toLowerCase() === "admin@causu68.vn") {
             userPassword = "admin";
         }
         
-        passwordInput.value = userPassword || "••••••••";
-        passwordInput.type = "password";
-        
-        const eyeIcon = togglePasswordBtn.querySelector("i");
-        if (eyeIcon) {
-            eyeIcon.setAttribute("data-lucide", "eye");
-            initLucide();
+        if (passwordInput) {
+            passwordInput.value = userPassword || "••••••••";
+            passwordInput.type = "password";
         }
         
+        if (togglePasswordBtn) {
+            const eyeIcon = togglePasswordBtn.querySelector("i");
+            if (eyeIcon) {
+                eyeIcon.setAttribute("data-lucide", "eye");
+            }
+        }
+        
+        // Reset password input types inside change password form
+        if (changeSection) {
+            changeSection.querySelectorAll("input").forEach(inp => inp.type = "password");
+            changeSection.querySelectorAll(".btn-toggle-pwd-visibility i").forEach(icon => icon.setAttribute("data-lucide", "eye"));
+        }
+        
+        initLucide();
+    };
+    
+    profileBox.addEventListener("click", () => {
+        const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+        
+        if (nameSpan) nameSpan.textContent = currentUser.name || "Người dùng";
+        if (emailSpan) emailSpan.textContent = currentUser.email || "";
+        
+        if (avatarDiv) {
+            if (currentUser.name) {
+                avatarDiv.textContent = currentUser.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+            } else {
+                avatarDiv.textContent = "U";
+            }
+        }
+        
+        resetToView();
         profileModal.classList.add("active");
     });
     
@@ -3787,6 +3842,48 @@ function initProfileModal() {
     if (closeBtn) closeBtn.addEventListener("click", closeModal);
     if (closeFooterBtn) closeFooterBtn.addEventListener("click", closeModal);
     
+    // Switch to Change Password mode
+    if (btnShowChangePwd) {
+        btnShowChangePwd.addEventListener("click", () => {
+            if (viewSection) viewSection.style.display = "none";
+            if (viewFooter) viewFooter.style.display = "none";
+            if (changeSection) changeSection.style.display = "flex";
+            if (changeFooter) changeFooter.style.display = "flex";
+            
+            if (headerTitle) headerTitle.textContent = "Đổi mật khẩu tài khoản";
+            if (headerIcon) {
+                headerIcon.setAttribute("data-lucide", "key-round");
+            }
+            initLucide();
+        });
+    }
+    
+    // Cancel changing password
+    if (btnCancelChangePwd) {
+        btnCancelChangePwd.addEventListener("click", resetToView);
+    }
+    
+    // Toggle visibility for any password fields in Change Password section
+    document.querySelectorAll(".btn-toggle-pwd-visibility").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.getAttribute("data-target");
+            const input = document.getElementById(targetId);
+            const icon = btn.querySelector("i");
+            
+            if (input && icon) {
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.setAttribute("data-lucide", "eye-off");
+                } else {
+                    input.type = "password";
+                    icon.setAttribute("data-lucide", "eye");
+                }
+                initLucide();
+            }
+        });
+    });
+    
+    // Toggle visibility for primary view password
     if (togglePasswordBtn && passwordInput) {
         togglePasswordBtn.addEventListener("click", () => {
             const eyeIcon = togglePasswordBtn.querySelector("i");
@@ -3798,6 +3895,124 @@ function initProfileModal() {
                 if (eyeIcon) eyeIcon.setAttribute("data-lucide", "eye");
             }
             initLucide();
+        });
+    }
+    
+    // Save New Password Action
+    if (btnSaveChangePwd) {
+        btnSaveChangePwd.addEventListener("click", async () => {
+            const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+            const currentPwd = currentPwdInput.value;
+            const newPwd = newPwdInput.value;
+            const confirmPwd = confirmPwdInput.value;
+            
+            const showError = (msg) => {
+                if (pwdErrorDiv) {
+                    pwdErrorDiv.textContent = msg;
+                    pwdErrorDiv.style.display = "block";
+                }
+            };
+            
+            if (pwdErrorDiv) {
+                pwdErrorDiv.style.display = "none";
+                pwdErrorDiv.textContent = "";
+            }
+            
+            if (!currentPwd || !newPwd || !confirmPwd) {
+                showError("Vui lòng điền đầy đủ các trường thông tin.");
+                return;
+            }
+            
+            // Validate current password locally first
+            let actualCurrentPwd = currentUser.password;
+            if (!actualCurrentPwd && currentUser.email && currentUser.email.toLowerCase() === "admin@causu68.vn") {
+                actualCurrentPwd = "admin";
+            }
+            if (actualCurrentPwd && currentPwd !== actualCurrentPwd) {
+                showError("Mật khẩu hiện tại không chính xác.");
+                return;
+            }
+            
+            if (newPwd.length < 6) {
+                showError("Mật khẩu mới phải có tối thiểu 6 ký tự.");
+                return;
+            }
+            
+            if (newPwd === currentPwd) {
+                showError("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+                return;
+            }
+            
+            if (newPwd !== confirmPwd) {
+                showError("Xác nhận mật khẩu mới không trùng khớp.");
+                return;
+            }
+            
+            if (state.gasUrl) {
+                btnSaveChangePwd.disabled = true;
+                btnSaveChangePwd.textContent = "Đang lưu...";
+                try {
+                    const response = await fetch(state.gasUrl, {
+                        method: "POST",
+                        mode: "cors",
+                        body: JSON.stringify({
+                            action: "changePassword",
+                            email: currentUser.email,
+                            currentPassword: currentPwd,
+                            newPassword: newPwd
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.status === "success") {
+                        showToast("Đổi mật khẩu thành công!", "success");
+                        
+                        // Update current user state in session/local storage
+                        currentUser.password = newPwd;
+                        const storage = localStorage.getItem("contract_system_logged_in") ? localStorage : sessionStorage;
+                        storage.setItem("contract_system_current_user", JSON.stringify(currentUser));
+                        
+                        resetToView();
+                    } else {
+                        showError(result.message);
+                    }
+                } catch (err) {
+                    showError("Lỗi đồng bộ máy chủ: " + err.message);
+                } finally {
+                    btnSaveChangePwd.disabled = false;
+                    btnSaveChangePwd.textContent = "Lưu mật khẩu";
+                }
+            } else {
+                // Offline Local update
+                let localUsers = JSON.parse(localStorage.getItem("contract_system_users") || "[]");
+                let found = false;
+                localUsers = localUsers.map(u => {
+                    if (u.email.toLowerCase() === currentUser.email.toLowerCase()) {
+                        u.password = newPwd;
+                        found = true;
+                    }
+                    return u;
+                });
+                
+                if (!found && currentUser.email.toLowerCase() === "admin@causu68.vn") {
+                    localUsers.push({
+                        name: currentUser.name || "Hoàng Ngọc Thắng",
+                        email: "admin@causu68.vn",
+                        password: newPwd,
+                        role: "admin",
+                        status: "active"
+                    });
+                }
+                
+                localStorage.setItem("contract_system_users", JSON.stringify(localUsers));
+                
+                // Update current user state in session/local storage
+                currentUser.password = newPwd;
+                const storage = localStorage.getItem("contract_system_logged_in") ? localStorage : sessionStorage;
+                storage.setItem("contract_system_current_user", JSON.stringify(currentUser));
+                
+                showToast("Đổi mật khẩu thành công!", "success");
+                resetToView();
+            }
         });
     }
 }
