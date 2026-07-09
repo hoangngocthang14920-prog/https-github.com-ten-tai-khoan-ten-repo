@@ -151,6 +151,15 @@ function initAuthentication() {
         });
     }
     
+    // Forgot Password
+    const forgotPasswordBtn = document.getElementById('btn-forgot-password');
+    if (forgotPasswordBtn) {
+        forgotPasswordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert("Chúc mừng bạn đã quên mật khẩu, muốn lấy lại mật khẩu liên hệ Mr Thắng PKD, SĐT: 0936.344.968");
+        });
+    }
+    
     // Add mock clicks for social icons
     const socialIcons = document.querySelectorAll(".auth-social-icons a");
     socialIcons.forEach(icon => {
