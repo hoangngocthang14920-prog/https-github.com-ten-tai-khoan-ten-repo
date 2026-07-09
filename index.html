@@ -1233,6 +1233,62 @@
         </div>
     </div>
     
+    <!-- USER PROFILE DIALOG -->
+    <div class="modal-backdrop" id="user-profile-modal">
+        <div class="modal-container modal-small">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <i data-lucide="user" class="header-icon text-accent"></i>
+                    <h3>Thông tin tài khoản</h3>
+                </div>
+                <button class="modal-close" id="btn-close-profile-modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 30px 24px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent), var(--color-purple)); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 32px; box-shadow: 0 0 20px var(--color-accent-glow); border: 2px solid rgba(255,255,255,0.1);" id="profile-modal-avatar">
+                    U
+                </div>
+                
+                <div style="width: 100%; display: flex; flex-direction: column; gap: 16px;">
+                    <div class="detail-field">
+                        <span class="field-label">Tên tài khoản</span>
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+                            <i data-lucide="user" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                            <span class="field-value" id="profile-modal-name" style="font-weight: 600;">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <span class="field-label">Gmail / Email</span>
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+                            <i data-lucide="mail" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                            <span class="field-value" id="profile-modal-email">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <span class="field-label">Mật khẩu</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+                            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <i data-lucide="key-round" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                <input type="password" id="profile-modal-password" value="••••••••" readonly style="background: transparent; border: none; outline: none; padding: 0; color: var(--text-primary); font-size: 14px; width: 100%; font-family: monospace; letter-spacing: 2px;">
+                            </div>
+                            <button type="button" id="btn-toggle-profile-password" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: var(--transition);">
+                                <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-close-profile-modal-footer">Đóng</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- TOAST NOTIFICATIONS CONTAINER -->
     <div class="toast-container" id="toast-container"></div>
     

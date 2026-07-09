@@ -55,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initUploadEvents();
     initFilterEvents();
     initModalEvents();
+    initProfileModal();
     initLucide();
     
     // Initial Render
@@ -312,7 +313,8 @@ function initAuthentication() {
                 email: user.email,
                 name: user.name,
                 role: user.role || "admin",
-                status: user.status || "active"
+                status: user.status || "active",
+                password: user.password
             };
             
             const storage = rememberMe && rememberMe.checked ? localStorage : sessionStorage;
@@ -419,7 +421,8 @@ function initAuthentication() {
                         
                         const storage = rememberMe && rememberMe.checked ? localStorage : sessionStorage;
                         storage.setItem("contract_system_logged_in", "true");
-                        storage.setItem("contract_system_current_user", JSON.stringify(resJson.data));
+                        const userData = { ...resJson.data, password: password };
+                        storage.setItem("contract_system_current_user", JSON.stringify(userData));
                         
                         showToast("Đăng nhập thành công!", "success");
                         emailInput.value = "";
@@ -3730,6 +3733,74 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+function initProfileModal() {
+    const profileBox = document.getElementById("user-profile-box");
+    const profileModal = document.getElementById("user-profile-modal");
+    const closeBtn = document.getElementById("btn-close-profile-modal");
+    const closeFooterBtn = document.getElementById("btn-close-profile-modal-footer");
+    
+    const nameSpan = document.getElementById("profile-modal-name");
+    const emailSpan = document.getElementById("profile-modal-email");
+    const passwordInput = document.getElementById("profile-modal-password");
+    const avatarDiv = document.getElementById("profile-modal-avatar");
+    const togglePasswordBtn = document.getElementById("btn-toggle-profile-password");
+    
+    if (!profileBox || !profileModal) return;
+    
+    profileBox.style.cursor = "pointer";
+    profileBox.title = "Xem thông tin tài khoản";
+    
+    profileBox.addEventListener("click", () => {
+        const currentUser = JSON.parse(localStorage.getItem("contract_system_current_user") || sessionStorage.getItem("contract_system_current_user") || "{}");
+        
+        nameSpan.textContent = currentUser.name || "Người dùng";
+        emailSpan.textContent = currentUser.email || "";
+        
+        if (currentUser.name) {
+            avatarDiv.textContent = currentUser.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+        } else {
+            avatarDiv.textContent = "U";
+        }
+        
+        let userPassword = currentUser.password;
+        if (!userPassword && currentUser.email && currentUser.email.toLowerCase() === "admin@causu68.vn") {
+            userPassword = "admin";
+        }
+        
+        passwordInput.value = userPassword || "••••••••";
+        passwordInput.type = "password";
+        
+        const eyeIcon = togglePasswordBtn.querySelector("i");
+        if (eyeIcon) {
+            eyeIcon.setAttribute("data-lucide", "eye");
+            initLucide();
+        }
+        
+        profileModal.classList.add("active");
+    });
+    
+    const closeModal = () => {
+        profileModal.classList.remove("active");
+    };
+    
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    if (closeFooterBtn) closeFooterBtn.addEventListener("click", closeModal);
+    
+    if (togglePasswordBtn && passwordInput) {
+        togglePasswordBtn.addEventListener("click", () => {
+            const eyeIcon = togglePasswordBtn.querySelector("i");
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                if (eyeIcon) eyeIcon.setAttribute("data-lucide", "eye-off");
+            } else {
+                passwordInput.type = "password";
+                if (eyeIcon) eyeIcon.setAttribute("data-lucide", "eye");
+            }
+            initLucide();
+        });
+    }
+}
 
 
 
