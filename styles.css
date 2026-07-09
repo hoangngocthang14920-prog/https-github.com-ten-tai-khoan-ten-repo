@@ -3500,7 +3500,7 @@ body.light-theme .table-main tbody tr:hover {
 }
 
 .auth-container {
-    background-color: var(--bg-card);
+    background-color: #050810;
     backdrop-filter: var(--glass-blur);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
@@ -3595,6 +3595,7 @@ body.light-theme .table-main tbody tr:hover {
     transition: background-color 0.3s ease;
 }
 
+body.light-theme .auth-container,
 body.light-theme .auth-container form {
     background-color: #ffffff;
 }
